@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+$SVN diff $* | sed -e "s/\t(working/\ (working/g" | sed -e "s/\t(revision/\ (revision/"

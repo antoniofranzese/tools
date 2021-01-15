@@ -1,0 +1,69 @@
+#!/bin/zsh
+
+FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
+
+case $1 in
+	list)
+		NAME=${2:-\/}
+
+		if [ "$NAME" = "/" ]; then
+			$SVN status | sed "/--- Changelist/,$ d" | grep -v "^\\?" | grep -v -e '^$'
+		else
+			$SVN status | sed -n "/--- Changelist '$NAME'/,/--- Changelist/ p" | grep -v "\--- Changelist" | grep -v -e '^$'
+		fi
+		;;
+
+	lists)
+		[ $( $SVN status | wc -l ) -gt 0 ] && echo \/
+		$SVN status | grep "\--- Changelist" | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/"
+		;;
+
+	add)
+		TARGET=$2
+
+		[ -z $TARGET ] && echo "Missing target list" && exit 1
+		[ "$TARGET" = "/" ] && echo "Cannot add to root list" && exit 1
+		[ $( $0 list / | wc -l ) -eq 0 ] && echo "Nothing to add" && exit 0
+
+		$0 list / \
+			| fzf ${FZF[@]} \
+			| awk '{ print $2 }' \
+			| xargs -n1 $SVN changelist $TARGET
+		;;
+
+			#| fzf -m --preview-window="up:70%" --preview="$PREVIEW" \
+	remove)
+		SOURCE=$2
+
+		[ -z $SOURCE ] && echo "Missing source list" && exit 1
+		[ "$SOURCE" = "/" ] && echo "Cannot remove from root list" && exit 1
+		[ $( $0 list $SOURCE | wc -l ) -eq 0 ] && echo "Nothing to remove" && exit 0
+
+		$0 list $SOURCE \
+			| fzf ${FZF[@]} \
+			| awk '{ print $2 }' \
+			| xargs -n1 $SVN changelist --remove $TARGET
+		;;
+
+	status)
+		[ $( $0 list / | wc -l ) -gt 0 ] && echo --- Changelist \'/\':
+		$SVN status
+		;;
+
+	*)
+		#[ -n $1 ] && echo "Unknown command: $1" && exit 1
+
+		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
+		LS=/
+		while read LINE; do
+			if [[ "$LINE" =~ ^\--- ]]; then
+				LS=$( echo $LINE | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/" )
+			else
+				STATUS=$( echo ${LINE[1,7]} | sed -e "s/\ /-/g" )
+				printf "%-${LEN}s  %s %s" "$LS" "$STATUS" "${LINE[8,-1]}"
+				echo
+			fi
+		done <<< $( $0 status | grep -v "^$" )
+
+
+esac

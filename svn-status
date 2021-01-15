@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+HEADER=$($SVN info | grep "^Revision:")
+
+OUT=$($SVN status $*)
+
+HEADER=$HEADER\ \ \ \ $(echo $OUT | grep "Status against")
+BODY=$(echo $OUT | grep -v "Status against")
+
+echo $HEADER
+while read LINE; do
+	echo $LINE
+done <<< $BODY

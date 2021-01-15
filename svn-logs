@@ -1,0 +1,24 @@
+#!/bin/zsh
+
+case $1 in
+	preview)
+		$SVN log -v -c $2
+		;;
+
+	diffs)
+		$SVN diff -c $2 | delta --paging never
+		;;
+	
+	view)
+		$SVN diff -c $2 | delta --side-by-side --paging always
+		;;
+
+	*)
+		$SVN log $* | egrep "^r[0-9]*\ \|" \
+			| fzf \
+				--header=$'\n^P: Diff Preview   ^V: View' \
+				--preview "$0 preview {1}" \
+				--bind "ctrl-v:execute($0 view {1})" \
+				--bind "ctrl-p:preview($0 diffs {1})"
+		;;
+esac

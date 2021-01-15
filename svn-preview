@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+NAME=$1
+
+[ -z "$NAME" ] && exit 1
+
+CHECK=$($SVN info $NAME 2>&1 | grep "^Path:")
+
+if [ -z "$CHECK" ]; then
+	bat --color=always --style=numbers $NAME
+else
+	$SVN diff $NAME | delta --file-style omit --hunk-header-style omit --paging never --line-numbers | grep -Ev "^(Index:|=======)"
+fi

@@ -1,0 +1,12 @@
+#!/bin/zsh
+
+NAME=$1
+FILE=$2
+
+TYPE=$NAME:e
+[ -z "$NAME" ] && TYPE=txt
+[ -z "$TYPE" ] && TYPE=$NAME:t
+TYPE=$(bat -L | cut -d: -f2 | sed -e "s/,/\n/g" | egrep "^${TYPE}\$")
+[ -z "$TYPE" ] && TYPE=txt
+
+cat | bat --color=always --style=numbers --language $TYPE

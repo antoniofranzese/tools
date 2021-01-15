@@ -1,12 +1,28 @@
 #!/bin/zsh
 
+log() {
+	[ -n "$TRACE" ] && echo '[SVN]' $* 
+}
+
 SVN=${SVN_EXECUTABLE:-/usr/bin/svn}
+log Executable: ${SVN}
+
 COMMAND=$1
 shift
 
+# Search and source the startup script
+RC=.svnrc
+CWD=$PWD
+while [ $PWD != "/" ]; do 
+	[ -x $RC ] && source $RC
+	[ -f $RC ] && RC=${PWD}/${RC} && break
+	cd .. 
+done
+cd $CWD
+log Startup script: $RC
+
 # Parse command line
 CMDLINE=
-RC=$HOME/.svnrc
 while [ -n "$1" ]; do
 	if [[ "$1" =~ ^:.* ]]; then
 		if [ -f $RC ]; then
@@ -25,11 +41,10 @@ if [ "$COMMAND" != "" ]; then
 	PLUGIN_NAME=$(basename $0)-$COMMAND
 	PLUGIN=$(command -v $PLUGIN_NAME)
 	if [ "$PLUGIN" != "" ]; then
-		#echo $LOG Dispatching to $PLUGIN
+		log Dispatching to: $PLUGIN
 		eval SVN=$SVN $PLUGIN $CMDLINE
 		exit 0
 	fi
 fi
 
-#echo "[SVN] ${SVN}"
 eval $SVN $COMMAND $CMDLINE

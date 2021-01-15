@@ -1,0 +1,99 @@
+#!/bin/zsh
+
+case $1 in
+
+	preview)
+		shift
+		URL=$1
+		
+		if [[ "$URL" =~ .*\/$ ]]; then
+			$SVN ls -v $URL 
+		else
+			$SVN cat $URL | svn-highlight $URL
+		fi
+		;;
+	
+	tree)
+		CMD=$SVN\ ls\ -R
+		URL=$2
+		;;
+
+	blame)
+		shift
+		URL=$1
+		ITEM=${URL}$2
+		
+		if [[ "$ITEM" =~ .*\/$ ]]; then
+			$0 $URL
+		else
+			$SVN blame $ITEM | svn-highlight $ITEM 
+			$0 $URL
+		fi
+
+		;;
+
+	*)
+		CMD=$SVN\ ls
+		URL=$1
+		;;
+esac
+	
+[ -z "$CMD" ] && exit 0
+
+if [ -z "$URL" ]; then
+	URL=$($SVN info 2>&1 | grep ^URL: | cut -c6-)
+fi
+
+if [ -z "$URL" ]; then
+	echo Nothing to browse
+	exit 1
+fi
+
+[[ "$URL" =~ .*\/$ ]] || URL=${URL}/
+
+OUT=$(eval $CMD $URL \
+	| fzf \
+		--height=80% \
+		--layout=reverse-list \
+		--header=$'\n?=Preview ^T=Tree ^O=Checkout ^B=Blame \U2190 \U2192 =Chdir\n\nBrowsing '$URL \
+		--bind='?:toggle-preview' \
+		--bind='ctrl-s:toggle-sort' \
+		--expect='ctrl-t,ctrl-o,ctrl-b,left,right' \
+		--preview-window=hidden:down:70% \
+		--preview "$0 preview $URL{}")
+
+KEY=$(head -1 <<< "$OUT")
+ITEM=$(tail -1 <<< "$OUT")
+
+[ -z $ITEM ] && exit 0
+
+case $KEY in
+
+	ctrl-o)
+		echo svn checkout $URL
+		;;
+	
+	ctrl-b)
+		$0 blame $URL $ITEM
+		;;
+
+	ctrl-t)
+		$0 tree $URL
+		;;
+
+	left)
+		PARENT=$(echo $URL | sed -e "s/\/$//" | sed -e "s/\/[^\/]*$//")
+		$0 $PARENT
+		;;
+
+	right)
+		NEXT=${URL}${ITEM}
+		[[ "$NEXT" =~ .*\/$ ]] && $0 $NEXT || $0 $URL
+		;;
+
+	*)
+		NEXT=${URL}${ITEM}
+		echo $NEXT
+		;;
+
+esac

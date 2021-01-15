@@ -1,0 +1,22 @@
+#!/bin/zsh
+
+URL=$(svn info | grep ^Relative\ URL: | cut -c15-)
+
+[ -z $URL ] && echo "$PWD is not a working copy" && exit 1
+
+TAG=$1
+shift 1
+
+COMMENT=$*
+
+if [[ "$URL" =~ .*\/trunk$ ]]; then
+	TAG_URL=$(echo $URL | sed -e "s/\/trunk$//" )/tags/$TAG
+elif [[ "$URL" =~ .*\/branches/.* ]]; then
+	TAG_URL=$(echo $URL | sed -e "s/\/branches\/.*//" )/tags/$TAG
+else
+	TAG_URL=$URL
+fi
+
+[ -n "$COMMENT" ] && COMMENT_ARG="-m \"$COMMENT\""
+
+echo svn copy \'$URL\' \'$TAG_URL\' $COMMENT_ARG
