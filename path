@@ -1,0 +1,21 @@
+#!/bin/bash
+
+case $1 in
+
+prepend)
+	PATTERN=$(echo $2 | sed -e "s/\//\\\\\//g")
+	PATH=$(echo $PATH | sed -e "s/${PATTERN}\:*//g" )
+	echo $2:$PATH
+	;;
+
+append)
+	PATTERN=$(echo $2 | sed -e "s/\//\\\\\//g")
+	PATH=$(echo $PATH | sed -e "s/${PATTERN}\:*//g" )
+	echo $PATH:$2
+	;;
+
+*)
+	echo $PATH
+	;;
+
+esac
