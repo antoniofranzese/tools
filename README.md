@@ -6,7 +6,7 @@ These tools are intended for a ZSH environment, if you still use BASH, please up
 Windows users should install and configure WSL (1 or 2); no Unix prompt, no tools.
 
 ## Base installation
-Clone the project and add the folder to the PATH **before** the system /bin and /usr/bin.
+Clone the project and add the bin folder to the PATH **before** the system /bin and /usr/bin.
 
 The wrapper tools require the main tools (mvn, svn, kubectl, etc.), install them as need.
 
