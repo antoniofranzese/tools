@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+ME=$(basename $0)
+
 case $1 in
 	preview)
 		$SVN log -v -c $2
@@ -13,8 +15,29 @@ case $1 in
 		$SVN diff -c $2 | delta --side-by-side --paging always
 		;;
 
+	lines)
+		[[ $# > 0 ]] && shift
+		LINE=""
+		while read chunk; do
+
+			if [[ "$chunk" =~ ^\--- ]]; then
+				if [ -n "$LINE" ]; then
+					echo $LINE
+				fi
+				LINE=""
+			else
+				[ -n "$LINE" ] && LINE=$LINE\ \|
+				LINE=$LINE\ $chunk
+			fi
+
+		done <<< $($SVN log $* | grep -v "^$" )
+		;;
+
 	*)
-		$SVN log $* | egrep "^r[0-9]*\ \|" \
+		URL=$(svn eval RelativeURL)
+		LOG_PATH=${1:-$URL}	
+		$ME lines $LOG_PATH \
+			| awk -F'|' '{printf "%-8s %-20.20s %.20s %s\n", $1, $2, $3, $5}' \
 			| fzf \
 				--header=$'\n^P: Diff Preview   ^V: View' \
 				--preview "$0 preview {1}" \

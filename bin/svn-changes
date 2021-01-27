@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+ME=$(basename $0)
 FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
 
 case $1 in
@@ -45,25 +46,54 @@ case $1 in
 			| xargs -n1 $SVN changelist --remove $TARGET
 		;;
 
-	status)
-		[ $( $0 list / | wc -l ) -gt 0 ] && echo --- Changelist \'/\':
-		$SVN status
+	preview)
+		$ME \
+			| fzf \
+				--header-lines=1 \
+				--preview="svn preview {4}"
+		;;
+	
+	update)
+		$ME remote \
+			| fzf \
+				--header-lines=1 \
+				--preview="$ME remote diff {2} {4}"
 		;;
 
-	*)
-		#[ -n $1 ] && echo "Unknown command: $1" && exit 1
+	remote)
+		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
+		LS=/
+		while read LINE; do
+			if [[ "$LINE" =~ ^#\--- ]]; then
+				LS=$( echo $LINE | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/" )
+			elif [[ "$LINE" =~ ^#Revision ]]; then
+				echo $LINE[2,-1]
+			else
+				STATUS=$( echo ${LINE[2,11]} | sed -e "s/\ /-/g" )
+				REV=$( echo ${LINE[13,19]} | xargs )
+				printf "%-${LEN}s  %s %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[22,-1]}"
+				echo
+			fi
+		done <<< $( svn status -u | grep -v "^$" | sed -e "s/^/#/" )
+		;;
 
+	"")
 		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
 		LS=/
 		while read LINE; do
 			if [[ "$LINE" =~ ^\--- ]]; then
 				LS=$( echo $LINE | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/" )
+			elif [[ "$LINE" =~ ^Revision ]]; then
+				echo $LINE
 			else
 				STATUS=$( echo ${LINE[1,7]} | sed -e "s/\ /-/g" )
-				printf "%-${LEN}s  %s %s" "$LS" "$STATUS" "${LINE[8,-1]}"
+				REV=$( $SVN info ${LINE[9,-1]} 2>&1 | egrep "^Revision:" | awk '{print $2}' )
+				printf "%-${LEN}s  %s--- %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[8,-1]}"
 				echo
 			fi
-		done <<< $( $0 status | grep -v "^$" )
+		done <<< $( svn status | grep -v "^$" )
+		;;
 
-
+	*)
+		echo Unknown $ME command: $1
 esac

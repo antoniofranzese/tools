@@ -1,0 +1,15 @@
+#!/bin/zsh
+
+VAR="$(printf "%q" "${@}")"
+
+PROPS=$(while read line; do
+	PROP=$(echo $line | cut -d: -f1 | sed "s/\ //g" )
+	VAL=$(echo $line | cut -d: -f2- | sed "s/^\ *//" )
+	echo ${PROP}=${VAL}
+done <<< $(svn info))
+
+if [ -z "$VAR" ]; then
+	echo $PROPS
+else 
+	echo $(echo $PROPS | egrep "^${VAR}=" | cut -d= -f2-)
+fi

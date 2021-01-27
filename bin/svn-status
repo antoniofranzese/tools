@@ -1,13 +1,14 @@
 #!/bin/zsh
 
-HEADER=$($SVN info | grep "^Revision:")
+URL=$($SVN info | grep "^Relative URL:" | cut -d' ' -f3- )
+REV=$($SVN info | grep "^Revision:" | cut -d' ' -f2 )
+HEADER=Revision:\ $URL@$REV
 
 OUT=$($SVN status $*)
-
-HEADER=$HEADER\ \ \ \ $(echo $OUT | grep "Status against")
+REMOTE=$(echo $OUT | grep "Status against")
 BODY=$(echo $OUT | grep -v "Status against")
 
+[ -n "$REMOTE" ] && HEADER=$HEADER$'\n'$REMOTE
+
 echo $HEADER
-while read LINE; do
-	echo $LINE
-done <<< $BODY
+echo $BODY
