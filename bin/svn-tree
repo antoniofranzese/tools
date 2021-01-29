@@ -11,6 +11,6 @@ for NAME in `find -L . -name .svn | sed "s/\/\.svn//" | sed "s/^.\///"`; do
 		pushd $NAME > /dev/null
 		eval svn $CMD 
 		popd > /dev/null
-		echo $'<<<' 
+		echo $'===' 
 	fi
 done

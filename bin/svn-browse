@@ -41,7 +41,7 @@ esac
 [ -z "$CMD" ] && exit 0
 
 if [ -z "$URL" ]; then
-	URL=$($SVN info 2>&1 | grep ^URL: | cut -c6-)
+	URL=$(svn eval URL)
 fi
 
 if [ -z "$URL" ]; then
@@ -60,7 +60,8 @@ OUT=$(eval $CMD $URL \
 		--bind='ctrl-s:toggle-sort' \
 		--expect='ctrl-t,ctrl-o,ctrl-b,left,right' \
 		--preview-window=hidden:down:70% \
-		--preview "$0 preview $URL{}")
+		--preview "$0 preview $URL{}" 
+	)
 
 KEY=$(head -1 <<< "$OUT")
 ITEM=$(tail -1 <<< "$OUT")
@@ -93,6 +94,7 @@ case $KEY in
 
 	*)
 		NEXT=${URL}${ITEM}
+		echo -n $NEXT | clip-copy
 		echo $NEXT
 		;;
 

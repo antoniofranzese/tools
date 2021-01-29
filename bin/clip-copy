@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	TEXT=$(cat)
+else
+	TEXT=$*
+fi
+
+case $(platform) in
+	"WSL")
+		if [ $(command -v winclip) ]; then
+			echo -n $TEXT | winclip
+		fi
+		;;
+
+	"OSX")
+		echo -n $TEXT | pbcopy
+		;;
+
+	*)
+		echo -n $TEXT | xclip -i -sel clipboard
+		;;
+esac
+
+if [ -n "$(tmux running)" ]; then
+	tmux copy $TEXT
+fi

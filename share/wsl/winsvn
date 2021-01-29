@@ -1,0 +1,1 @@
+/mnt/c/Program\ Files/TortoiseSVN/bin/svn.exe $* | dos2unix -q -1252

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ `uname` =~ Darwin ]]; then
+	echo "OSX"
+elif [[ `uname -r` =~ Microsoft ]]; then
+	echo "WSL"
+elif [[ `uname -a` =~ Android ]]; then
+	echo "Android"
+elif [[ `uname` =~ CYGWIN ]]; then
+	echo "CYGWIN"
+elif [[ `uname` =~ MSYS ]]; then
+	echo "MSYS"
+elif [[ `uname` =~ MINGW ]]; then
+	echo "MINGW"
+else
+	echo `uname`
+fi

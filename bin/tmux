@@ -1,0 +1,68 @@
+#!/bin/bash
+
+TMX=${TMUX_EXECUTABLE:-/usr/bin/tmux}
+
+case $1 in
+	reload)
+		$TMX source-file ~/.tmux.conf
+		;;
+
+	buffers)
+		$TMX list-buffers | fzf | cut -d: -f1 | tmux paste-buffer -b $(cat)
+		;;
+
+	copy)
+		shift
+		$0 write / $*
+		;;
+	
+	write)
+		shift
+		if [ "`$0 running`" == "yes" ]; then
+			if [ "$1" == "/" ]; then
+				BUF=
+			else
+				BUF=-b\ $1
+			fi
+			shift
+			echo -n $* | $TMX load-buffer $BUF -
+		fi
+
+		;;
+	
+	session)
+		SESSION=
+		# Start TMUX
+		if command -v $TMX > /dev/null ; then
+
+			if [[ `psgrep tmux` ]]; then
+				SESSION=`$TMX ls 2>&1 | grep "(attached)" | head -n 1 | cut -d: -f1`
+			fi
+		fi
+		echo $SESSION
+		;;
+
+	running)
+		if [[ "$TERM" =~ ^screen.* ]]; then
+			echo "yes"
+		fi
+		;;
+
+	*)
+		# Dispatch to external command plugin
+		COMMAND=$1
+		if [ "$COMMAND" != "" ]; then
+			PLUGIN_NAME=$(basename $0)-$COMMAND
+			PLUGIN=$(command -v $PLUGIN_NAME)
+			if [ "$PLUGIN" != "" ]; then
+				#echo Dispatching to $PLUGIN
+				shift
+				exec $PLUGIN "$@"
+				exit 0
+			fi
+		fi
+
+		$TMX "$@"
+		;;
+esac
+
