@@ -1,7 +1,7 @@
 # Shell Tools
 Command line utilities and wrappers, useful to keep the programmers away from the GUI devil.
 
-These tools are intended for a ZSH environment, if you still use BASH, please upgrade.
+These tools are intended for a ZSH environment, if you still use BASH adapt the proposed configurations to your needs.
 
 Windows users should install and configure WSL (1 or 2); no Unix prompt, no tools.
 
@@ -16,10 +16,10 @@ Install the required open source tools according to your operating system.
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CC86BB64
     sudo add-apt-repository ppa:rmescandon/yq
     sudo apt update
-    sudo apt install fzf batcat jq yq dialog
+    sudo apt install fzf bat jq yq dialog
 
 ### MacOS required tools
-    brew install fzf bat jq yq dialog
+    brew install fzf bat jq yq dialog git-delta
 
 ## Environment configuration
 Some tools are *wrappers* for the original executable, and must be provided with the **absolute path** of their original counterpart; if not configured, they assume a default, suitable only for a standard Linux/WSL environment (MacOS requires configuration).
