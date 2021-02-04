@@ -8,7 +8,7 @@ case $1 in
 		;;
 
 	diffs)
-		$SVN diff -c $2 | delta --paging never
+		$SVN diff -c $2 | delta --paging never --line-numbers
 		;;
 	
 	view)

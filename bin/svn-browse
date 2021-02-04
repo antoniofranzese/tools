@@ -55,10 +55,10 @@ OUT=$(eval $CMD $URL \
 	| fzf \
 		--height=80% \
 		--layout=reverse-list \
-		--header=$'\n?=Preview ^T=Tree ^O=Checkout ^B=Blame \U2190 \U2192 =Chdir\n\nBrowsing '$URL \
+		--header=$'\n?=Preview ^T=Tree ^O=Checkout ^B=Blame ^L=Log \U2190 \U2192 =Chdir\n\nBrowsing '$URL \
 		--bind='?:toggle-preview' \
 		--bind='ctrl-s:toggle-sort' \
-		--expect='ctrl-t,ctrl-o,ctrl-b,left,right' \
+		--expect='ctrl-t,ctrl-o,ctrl-b,ctrl-l,left,right' \
 		--preview-window=hidden:down:70% \
 		--preview "$0 preview $URL{}" 
 	)
@@ -80,6 +80,11 @@ case $KEY in
 
 	ctrl-t)
 		$0 tree $URL
+		;;
+
+	ctrl-l)
+		NEXT=${URL}${ITEM}
+		svn logs $NEXT
 		;;
 
 	left)
