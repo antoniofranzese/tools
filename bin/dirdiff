@@ -17,6 +17,11 @@ case $CMD in
 		RE1=$( echo $DIR1 | sed 's/\//\\\//g' )
 		RE2=$( echo $DIR2 | sed 's/\//\\\//g' )
 
+		# TODO: rc configuration
+		[ -z "$DIFF_EXCLUDE" ] && DIFF_EXCLUDE='.svn:.git:target:.classpath:.project:.settings'
+		EX=("${(@s/:/)DIFF_EXCLUDE}") 
+		EXCLUDE=$( echo $EX | xargs -n1 echo -n ' -x' )
+
 		while read LINE; do
 			if [[ "$LINE" =~ ^Only ]]; then
 				FOLDER=$(echo $LINE | awk '{print $3}' | sed "s/:$//")
@@ -32,7 +37,7 @@ case $CMD in
 				FILE1=$(echo $LINE | awk '{print $2}' | sed "s/\<DIR1\>//" | sed "s/^\///")
 				print -P "%F{178}<> $FILE1%f" 
 			fi
-		done <<< $(diff --ignore-all-space --recursive --brief $DIR1 $DIR2 | sed "s/$RE1/\<DIR1\>/g" | sed "s/$RE2/\<DIR2\>/g" | sort ) 
+		done <<< $(eval diff --ignore-all-space --recursive --brief $EXCLUDE $DIR1 $DIR2 | sed "s/$RE1/\<DIR1\>/g" | sed "s/$RE2/\<DIR2\>/g" | sort ) 
 		;;
 
 	browse)
