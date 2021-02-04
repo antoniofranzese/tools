@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Cross platform mc wrapper
+#
+# Configure with:
+#   alias mc='. mc-wrap'
+#
+MC_USER=`id | sed 's/[^(]*(//;s/).*//'`
+MC_TMP="${TMPDIR-/tmp}/mc-$MC_USER"
+MC_PWD_FILE="${MC_TMP:0:63}/mc.pwd.$$"
+VIEWER=mc-view
+
+[ -x "/usr/local/bin/mc" ] && MC=/usr/local/bin/mc || MC=/usr/bin/mc
+$MC -x -P "$MC_PWD_FILE" "$@"
+
+if test -r "$MC_PWD_FILE"; then
+	MC_PWD="`cat "$MC_PWD_FILE"`"
+	if test -n "$MC_PWD" && test -d "$MC_PWD"; then
+		cd "$MC_PWD"
+	fi
+	unset MC_PWD
+fi
+
+rm -f "$MC_PWD_FILE"
+unset MC_PWD_FILE
+unset MC_TMP
+unset MC_USER
