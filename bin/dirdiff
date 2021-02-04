@@ -27,14 +27,14 @@ case $CMD in
 				FOLDER=$(echo $LINE | awk '{print $3}' | sed "s/:$//")
 				FILE=$(echo $LINE | awk '{print $4}')
 				[[ "$FOLDER" =~ ^\<DIR1\> ]] && SIDE='{red}<<' || SIDE='{93}>>'
-				FOLDER=$( echo $FOLDER | sed "s/\<DIR.\>//" | sed "s/^\///" )
+				FOLDER=$( echo $FOLDER | sed -e 's/<DIR.>//' | sed 's/^\///' )
 				if [ -z "$FOLDER" ]; then 
 					print -P "%F$SIDE $FILE%f"
 				else
 					print -P "%F$SIDE ${FOLDER}/$FILE%f"
 				fi
 			elif [[ "$LINE" =~ ^Files ]]; then
-				FILE1=$(echo $LINE | awk '{print $2}' | sed "s/\<DIR1\>//" | sed "s/^\///")
+				FILE1=$(echo $LINE | awk '{print $2}' | sed 's/<DIR1>//' | sed 's/^\///')
 				print -P "%F{178}<> $FILE1%f" 
 			fi
 		done <<< $(eval diff --ignore-all-space --recursive --brief $EXCLUDE $DIR1 $DIR2 | sed "s/$RE1/\<DIR1\>/g" | sed "s/$RE2/\<DIR2\>/g" | sort ) 
@@ -44,7 +44,7 @@ case $CMD in
 		[ -z "$DIR2" ] && $ME help && exit 1
 
 		$ME list $DIR1 $DIR2 \
-			| fzf \
+			| fzf --ansi \
 				--height="100%" \
 				--preview="$ME preview $DIR1 $DIR2 {1} {2}" \
 				--header=$'\n'"<enter>=Merge  ^C=Copy  ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
