@@ -1,0 +1,145 @@
+#!/bin/zsh
+
+ME=$(basename $0)
+
+CMD=$1
+DIR1=$(echo $2 | sed "s/\/$//" )
+DIR2=$(echo $3 | sed "s/\/$//" )
+
+#TMP=$(mktemp)
+#trap "rm -f $TMP" 0 1 2 5 15
+
+case $CMD in
+
+	list)
+		[ -z "$DIR2" ] && $ME help && exit 1
+
+		RE1=$( echo $DIR1 | sed 's/\//\\\//g' )
+		RE2=$( echo $DIR2 | sed 's/\//\\\//g' )
+
+		while read LINE; do
+			if [[ "$LINE" =~ ^Only ]]; then
+				FOLDER=$(echo $LINE | awk '{print $3}' | sed "s/:$//")
+				FILE=$(echo $LINE | awk '{print $4}')
+				[[ "$FOLDER" =~ ^\<DIR1\> ]] && SIDE='{red}<<' || SIDE='{93}>>'
+				FOLDER=$( echo $FOLDER | sed "s/\<DIR.\>//" | sed "s/^\///" )
+				if [ -z "$FOLDER" ]; then 
+					print -P "%F$SIDE $FILE%f"
+				else
+					print -P "%F$SIDE ${FOLDER}/$FILE%f"
+				fi
+			elif [[ "$LINE" =~ ^Files ]]; then
+				FILE1=$(echo $LINE | awk '{print $2}' | sed "s/\<DIR1\>//" | sed "s/^\///")
+				print -P "%F{178}<> $FILE1%f" 
+			fi
+		done <<< $(diff --ignore-all-space --recursive --brief $DIR1 $DIR2 | sed "s/$RE1/\<DIR1\>/g" | sed "s/$RE2/\<DIR2\>/g" | sort ) 
+		;;
+
+	browse)
+		[ -z "$DIR2" ] && $ME help && exit 1
+
+		$ME list $DIR1 $DIR2 \
+			| fzf \
+				--height="100%" \
+				--preview="$ME preview $DIR1 $DIR2 {1} {2}" \
+				--header=$'\n'"<enter>=Merge  ^C=Copy  ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
+				--bind="enter:execute( $ME merge $DIR1 $DIR2 {1} {2} )+reload( $ME list $DIR1 $DIR2 )" \
+				--bind="ctrl-r:reload( $ME list $DIR1 $DIR2 )" \
+				--bind="ctrl-c:execute( $ME cmdline $DIR1 $DIR2 {1} {2} | clip-copy )+abort"
+			#| xargs $ME cmdline $DIR1 $DIR2 
+		;;
+
+	preview)
+		[ -z "$5" ] && echo "Bad preview usage" && exit 1
+
+		FILE1=$DIR1/$5
+		FILE2=$DIR2/$5
+		case "$4" in 
+			'<>')
+				if [ -f "$FILE1" ]; then
+					diff -U3 $FILE1 $FILE2 | delta --paging=never --line-numbers
+				else 
+					echo $FILE1 $TYPE $FILE2
+				fi
+				;;
+
+			'<<')
+				if [ -d "$FILE1" ]; then
+					exa --tree --color=always $FILE1
+				else
+					bat --plain --color=always --paging=never $FILE1
+				fi
+				;;
+
+			'>>')
+				if [ -d "$FILE2" ]; then
+					exa --tree --color=always $FILE2
+				else
+					bat --plain --color=always --paging=never $FILE2
+				fi
+				;;
+		esac
+		;;
+
+	merge)
+		[ -z "$5" ] && echo "Bad merge usage" && exit 1
+
+		FILE1=$DIR1/$5
+		FILE2=$DIR2/$5
+		FILE=$5
+		case "$4" in 
+			'<>')
+				DIFF=${DIFF_TOOL:-vi\ -d}
+				if [ -f "$FILE1" ]; then
+					eval $DIFF $FILE1 $FILE2
+				fi
+				;;
+
+			'<<')
+				TARGET=$(dirname $FILE2)
+				dialog --title "LEFT -> RIGHT" --yesno "\nCopy $FILE\nfrom $DIR1\nto $DIR2?" 10 110 --erase-on-exit
+				[[ $? = 0 ]] && cp $FILE1 $TARGET
+				clear
+				;;
+
+			'>>')
+				TARGET=$(dirname $FILE1)
+				dialog --title "RIGHT -> LEFT" --yesno "\nCopy $FILE\nfrom $DIR2\nto $DIR1?" 10 110 --erase-on-exit
+				[[ $? = 0 ]] && cp $FILE2 $TARGET
+				clear
+				;;  
+		esac
+		;;
+	cmdline)
+		[ -z "$5" ] && echo "Bad cmdline usage" && exit 1
+
+		FILE1=$DIR1/$5
+		FILE2=$DIR2/$5
+		case "$4" in 
+			'<>')
+				[ -f "$FILE1" ] && echo diff $FILE1 $FILE2 || echo $FILE1 $FILE2
+				;;
+
+			'<<')
+				[ -d "$FILE1" ] && echo ls $FILE1 || echo cat $FILE1 
+				;;
+
+			'>>')
+				[ -d "$FILE2" ] && echo ls $FILE2 || echo cat $FILE2
+				;;
+		esac
+		;;
+
+	help)
+		echo Usage: $ME $'[list|browse] <dir1> <dir2>'
+		;;
+
+	*)
+		if [ -z "$DIR2" ]; then
+			$ME browse $CMD $DIR1
+		else
+			echo Unknown command: $CMD
+			exit 1
+		fi
+		;;
+esac
