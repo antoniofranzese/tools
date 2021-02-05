@@ -1,11 +1,11 @@
 #!/bin/zsh
 
-FZF=(-m --preview-window="up:70%" --preview="svn preview {3}")
+FZF=(-m --preview-window="up:70%" --preview="svn preview {4}")
 
 if [ -z "$1" ]; then
 	svn changes | grep -v "^/\s*\\?" \
 		| fzf ${FZF[@]} \
-		| awk '{ print $3 }' \
+		| awk '{ print $4 }' \
 		| xargs -n1 $SVN revert 
 else
 	$SVN revert $*

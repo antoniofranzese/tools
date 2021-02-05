@@ -1,0 +1,66 @@
+#!/bin/zsh
+
+ME=$(basename $0)
+CMDLINE=$*
+
+reload() {
+	echo 'Press any key to continue...'
+	read -k1 -s
+	eval $ME $CMDLINE
+}
+
+case $1 in
+
+	preview)
+		shift
+		NAME=$1
+		LOCAL_MOD=${2[1]}
+		REMOTE_MOD=${2[9]}
+		if [ "$REMOTE_MOD" = "*" ]; then
+			#HEAD=$($SVN info $NAME 2>&1 | grep "^Relative URL:" | cut -d" " -f3)\@HEAD
+			#eval $SVN diff $NAME $HEAD | delta --file-style omit --hunk-header-style omit --paging never --line-numbers
+			svn preview $NAME head
+		else
+			svn preview $NAME
+		fi
+		;;
+	
+	*)
+		OUT=$(svn changes remote \
+			| fzf -m \
+				--no-sort \
+				--header-lines=2 \
+				--expect="ctrl-u,ctrl-r" \
+				--preview="$ME preview {4} {2}" \
+			| tr -s ' '
+		)
+		KEY=$(head -1 <<< $OUT)
+		ROWS=$(tail -n +2 <<< $OUT)
+		#echo names
+		#echo $ROWS
+		#echo key
+		#echo $KEY
+
+		case "$KEY" in
+
+			ctrl-u)
+				while read ROW; do
+					ARGS=( ${(s. .)ROW} )
+					echo svn update ${ARGS[4]} ${ARGS[2]}
+				done <<< $(echo $ROWS) 
+				reload
+				;;
+
+			ctrl-r)
+				echo $NAMES | awk '{print $4}' | xargs -n1 echo svn revert
+				reload
+				;;
+
+			*)
+				echo Other
+				;;
+
+		esac
+		;;
+				
+esac

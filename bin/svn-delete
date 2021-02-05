@@ -1,0 +1,12 @@
+#!/bin/zsh
+
+FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
+
+if [ -z "$1" ]; then
+	$SVN status | grep '^!' \
+		| fzf -m \
+		| awk '{ print $2 }' \
+		| xargs -n1 $SVN delete 
+else
+	$SVN delete $*
+fi
