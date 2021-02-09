@@ -1,0 +1,52 @@
+#!/bin/zsh
+#
+# Generic command line parser and runner
+#
+
+log() {
+	[ -n "$TRACE" ] && echo '[RUN]' $* 
+}
+
+# Search and source the startup script
+RC=.runrc
+CWD=$PWD
+while [ $PWD != "/" ]; do 
+	[ -f $RC ] && source $RC && RC=${PWD}/${RC} && break
+	cd .. 
+done
+cd $CWD
+log Startup script: $RC
+
+# Check command
+if [[ "$1" =~ ^[a-z_\-]*$ ]]; then
+	COMMAND=$1
+	[[ $# > 0 ]] && shift
+fi
+
+# Parse command line
+CMDLINE=
+while [ -n "$1" ]; do
+	if [[ "$1" =~ ^:.* ]]; then
+		VAR="${1[2,-1]:u}"
+		if [ -n "${(P)VAR}" ]; then
+			CMDLINE=$CMDLINE\ ${(P)VAR}
+		fi
+	else
+		CMDLINE=$CMDLINE\ $1
+	fi
+	[[ $# > 0 ]] && shift || break
+done
+
+# Dispatch to external command plugin
+if [ "$COMMAND" != "" ]; then
+	PLUGIN_NAME=$(basename $0)-$COMMAND
+	PLUGIN=$(command -v $PLUGIN_NAME)
+	if [ "$PLUGIN" != "" ]; then
+		log Dispatching to: $PLUGIN
+		eval $PLUGIN $CMDLINE
+		exit 0
+	fi
+fi
+
+log $COMMAND $CMDLINE
+eval $COMMAND $CMDLINE
