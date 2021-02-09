@@ -1,0 +1,44 @@
+#!/bin/zsh
+
+ME=$(basename $0)
+FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
+
+case "$1" in
+	'')
+		$SVN status | grep "^\\?" \
+			| fzf ${FZF[@]} \
+			| awk '{ print $2 }' \
+			| xargs -n1 $ME add 
+
+		$ME list
+		;;
+
+	list)
+		$SVN propget --no-newline svn:ignore . 2>&/dev/null
+		;;
+
+	add)
+		[ -z "$2" ] && echo "Missing ignore pattern" && exit 1
+		TMP=$(mktemp)
+		trap "rm -f $TMP" 0 1 2 5 15
+		
+		$ME list > $TMP
+		echo $2 >> $TMP
+		$SVN propset svn:ignore -F $TMP .
+		;;
+
+	remove)
+		if [ -z "$2" ]; then
+			$ME list \
+				| fzf -m \
+				| xargs -n1 $ME remove 
+		else
+			TMP=$(mktemp)
+			trap "rm -f $TMP" 0 1 2 5 15
+
+			$ME list | grep -v "$2" > $TMP
+			$SVN propset svn:ignore -F $TMP .
+			$ME list
+		fi
+		;;
+esac
