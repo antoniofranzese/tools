@@ -10,9 +10,9 @@ MC_TMP="${TMPDIR-/tmp}/mc-$MC_USER"
 MC_PWD_FILE="${MC_TMP:0:63}/mc.pwd.$$"
 VIEWER=mc-view
 
-[ -x "/usr/local/bin/mc" ] && MC=/usr/local/bin/mc || MC=/usr/bin/mc
+#[ -x "/usr/local/bin/mc" ] && MC=/usr/local/bin/mc || MC=/usr/bin/mc
 #$MC -x -P "$MC_PWD_FILE" "$@"
-command mc -x -P "$MC_PWD_FILE" "$@"
+VIEWER=mc-view command mc -x -P "$MC_PWD_FILE" "$@"
 
 if test -r "$MC_PWD_FILE"; then
 	MC_PWD="`cat "$MC_PWD_FILE"`"

@@ -102,15 +102,19 @@ case $CMD in
 
 			'<<')
 				TARGET=$(dirname $FILE2)
-				dialog --title "LEFT -> RIGHT" --yesno "\nCopy $FILE\nfrom $DIR1\nto $DIR2?" 10 110 --erase-on-exit
-				[[ $? = 0 ]] && cp $FILE1 $TARGET
+				dialog --title "LEFT -> RIGHT" --yesno "\nCopy $FILE\nfrom $DIR1\nto $DIR2?" 10 110
+				if [[ $? = 0 ]]; then
+					[ -d $FILE1 ] && cp -R $FILE1 $TARGET || cp $FILE1 $TARGET
+				fi
 				clear
 				;;
 
 			'>>')
 				TARGET=$(dirname $FILE1)
-				dialog --title "RIGHT -> LEFT" --yesno "\nCopy $FILE\nfrom $DIR2\nto $DIR1?" 10 110 --erase-on-exit
-				[[ $? = 0 ]] && cp $FILE2 $TARGET
+				dialog --title "RIGHT -> LEFT" --yesno "\nCopy $FILE\nfrom $DIR2\nto $DIR1?" 10 110
+				if [[ $? = 0 ]]; then
+					[ -d $FILE2 ] && cp -R $FILE2 $TARGET || cp $FILE2 $TARGET
+				fi
 				clear
 				;;  
 		esac
