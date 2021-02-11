@@ -2,13 +2,19 @@
 #
 # Generic command line parser and runner
 #
+# Can be used as is, or symlinked with another name
+# The rc file name changes according to the main name
+#
+
+ME=$(dirname $0)
 
 log() {
-	[ -n "$TRACE" ] && echo '[RUN]' $* 
+	[ -n "$TRACE" ] && echo '[$ME]' $* 
 }
 
+
 # Search and source the startup script
-RC=.runrc
+RC=.${ME}rc
 CWD=$PWD
 while [ $PWD != "/" ]; do 
 	[ -f $RC ] && source $RC && RC=${PWD}/${RC} && break
@@ -39,14 +45,16 @@ done
 
 # Dispatch to external command plugin
 if [ "$COMMAND" != "" ]; then
-	PLUGIN_NAME=$(basename $0)-$COMMAND
+	PLUGIN_NAME=$ME-$COMMAND
 	PLUGIN=$(command -v $PLUGIN_NAME)
 	if [ "$PLUGIN" != "" ]; then
 		log Dispatching to: $PLUGIN
 		eval $PLUGIN $CMDLINE
 		exit 0
+	else
+		CMDLINE=$COMMAND\ $CMDLINE
 	fi
 fi
 
-log $COMMAND $CMDLINE
-eval $COMMAND $CMDLINE
+log $CMDLINE
+eval $CMDLINE
