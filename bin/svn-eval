@@ -1,15 +1,19 @@
 #!/bin/zsh
 
-VAR="$(printf "%q" "${@}")"
+#VAR="$(printf "%q" "${@}")"
+VAR=$1
+TARGET=${2:-.}
 
 PROPS=$(while read line; do
 	PROP=$(echo $line | cut -d: -f1 | sed "s/\ //g" )
 	VAL=$(echo $line | cut -d: -f2- | sed "s/^\ *//" )
 	echo ${PROP}=${VAL}
-done <<< $(svn info))
+done <<< $(svn info $TARGET))
 
 if [ -z "$VAR" ]; then
 	echo $PROPS
 else 
-	echo $(echo $PROPS | egrep "^${VAR}=" | cut -d= -f2-)
+	VALUE=$(echo $PROPS | egrep "^${VAR}=" | cut -d= -f2-)
+	echo $VALUE
+	echo -n $VALUE | clip-copy
 fi
