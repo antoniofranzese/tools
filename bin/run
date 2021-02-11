@@ -6,7 +6,7 @@
 # The rc file name changes according to the main name
 #
 
-ME=$(dirname $0)
+ME=$(basename $0)
 
 log() {
 	[ -n "$TRACE" ] && echo '[$ME]' $* 
@@ -57,4 +57,4 @@ if [ "$COMMAND" != "" ]; then
 fi
 
 log $CMDLINE
-eval $CMDLINE
+echo $CMDLINE
