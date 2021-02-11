@@ -44,13 +44,13 @@ case $CMD in
 		[ -z "$DIR2" ] && $ME help && exit 1
 
 		$ME list $DIR1 $DIR2 \
-			| fzf --ansi \
+			| fzf --ansi -m \
 				--height="100%" \
 				--preview="$ME preview $DIR1 $DIR2 {1} {2}" \
-				--header=$'\n'"<enter>=Merge  ^C=Copy  ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
+				--header=$'\n'"<enter>=Merge  ^C=Copy(L>R)  ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
 				--bind="enter:execute( $ME merge $DIR1 $DIR2 {1} {2} )+reload( $ME list $DIR1 $DIR2 )" \
 				--bind="ctrl-r:reload( $ME list $DIR1 $DIR2 )" \
-				--bind="ctrl-c:execute( $ME cmdline $DIR1 $DIR2 {1} {2} | clip-copy )+abort"
+				--bind="ctrl-c:execute-multi( $ME copy $DIR1 $DIR2 {} )+reload( $ME list $DIR1 $DIR2 )"
 			#| xargs $ME cmdline $DIR1 $DIR2 
 		;;
 
@@ -119,24 +119,33 @@ case $CMD in
 				;;  
 		esac
 		;;
-	cmdline)
-		[ -z "$5" ] && echo "Bad cmdline usage" && exit 1
 
-		FILE1=$DIR1/$5
-		FILE2=$DIR2/$5
-		case "$4" in 
-			'<>')
-				[ -f "$FILE1" ] && echo diff $FILE1 $FILE2 || echo $FILE1 $FILE2
-				;;
+	copy)
+		shift 3
 
-			'<<')
-				[ -d "$FILE1" ] && echo ls $FILE1 || echo cat $FILE1 
-				;;
+		while [ -n "$1" ]; do
+			OP=${1[1,2]}
+			FILE=${1[4,-1]}
+			FILE1=$DIR1/$FILE
+			FILE2=$DIR2/$FILE
 
-			'>>')
-				[ -d "$FILE2" ] && echo ls $FILE2 || echo cat $FILE2
-				;;
-		esac
+			case "$OP" in 
+				'<>'|'<<')
+					TARGET=$(dirname $FILE2)
+					if [ -d $FILE1 ]; then
+						echo Copying folder $FILE1 to $TARGET
+						cp -R $FILE1 $TARGET
+					else 
+						echo Copying file $FILE1 to $TARGET
+						cp $FILE1 $TARGET
+					fi
+					echo
+					;;
+			esac
+
+			shift 1
+		done
+		read -s -k '?Press any key to continue.'
 		;;
 
 	help)
