@@ -9,7 +9,7 @@
 ME=$(basename $0)
 
 log() {
-	[ -n "$TRACE" ] && echo '[$ME]' $* 
+	[ -n "$TRACE" ] && echo '['$ME']' $* 
 }
 
 
@@ -57,4 +57,4 @@ if [ "$COMMAND" != "" ]; then
 fi
 
 log $CMDLINE
-echo $CMDLINE
+eval $CMDLINE
