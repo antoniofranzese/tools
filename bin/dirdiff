@@ -47,10 +47,10 @@ case $CMD in
 			| fzf --ansi -m \
 				--height="100%" \
 				--preview="$ME preview $DIR1 $DIR2 {1} {2}" \
-				--header=$'\n'"<enter>=Merge  ^C=Copy(L>R)  ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
+				--header=$'\n'"<enter>=Merge  ^W=overWrite(L>R) ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
 				--bind="enter:execute( $ME merge $DIR1 $DIR2 {1} {2} )+reload( $ME list $DIR1 $DIR2 )" \
 				--bind="ctrl-r:reload( $ME list $DIR1 $DIR2 )" \
-				--bind="ctrl-c:execute-multi( $ME copy $DIR1 $DIR2 {} )+reload( $ME list $DIR1 $DIR2 )"
+				--bind="ctrl-w:execute-multi( $ME overwrite $DIR1 $DIR2 {} )+reload( $ME list $DIR1 $DIR2 )"
 			#| xargs $ME cmdline $DIR1 $DIR2 
 		;;
 
@@ -120,7 +120,7 @@ case $CMD in
 		esac
 		;;
 
-	copy)
+	overwrite)
 		shift 3
 
 		while [ -n "$1" ]; do
@@ -138,6 +138,16 @@ case $CMD in
 					else 
 						echo Copying file $FILE1 to $TARGET
 						cp $FILE1 $TARGET
+					fi
+					echo
+					;;
+				'>>')
+					if [ -d $FILE2 ]; then
+						echo Removing folder $FILE2
+						rm -rf $FILE2
+					else
+						echo Removing file $FILE2
+						rm -f $FILE2
 					fi
 					echo
 					;;
