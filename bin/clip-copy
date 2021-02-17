@@ -1,5 +1,17 @@
 #!/bin/bash
 
+while true; do
+	case $1 in
+		--tee)
+			TEE=y
+			shift;
+			;;
+		*)	
+			break;
+			;;
+	esac
+done
+
 if [ -z "$1" ]; then
 	TEXT=$(cat)
 else
@@ -24,4 +36,8 @@ esac
 
 if [ -n "$(tmux running)" ]; then
 	tmux copy $TEXT
+fi
+
+if [ -n "$TEE" ]; then
+	echo $TEXT
 fi
