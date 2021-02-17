@@ -4,7 +4,7 @@ FZF=(-m --preview-window="up:70%" --preview="svn preview {4}")
 
 if [ -z "$1" ]; then
 	svn changes | grep -v "^/\s*\\?" \
-		| fzf ${FZF[@]} \
+		| fzf ${FZF[@]} --header-lines=1 \
 		| awk '{ print $4 }' \
 		| xargs -n1 $SVN revert 
 else

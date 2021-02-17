@@ -46,6 +46,10 @@ case $1 in
 			| xargs -n1 $SVN changelist --remove $TARGET
 		;;
 
+	commit)
+		$SVN commit --changelist $2
+		;;
+
 	preview)
 		$ME \
 			| fzf \
