@@ -1,0 +1,75 @@
+#!/bin/zsh
+
+[ -z "$KAFKA_HOME" ] && echo "KAFKA_HOME is not set" && exit 1
+
+ME=$(basename $0)
+TOOL=$KAFKA_HOME/bin/kafka-consumer-groups.sh\ --timeout\ ${KAFKA_CLIENT_TIMEOUT:-30000}
+
+CMD=$1
+[[ $# > 0 ]] && shift
+CMDLINE="$@"
+
+case $CMD in
+
+	list)
+		eval $TOOL $CMDLINE --list
+		;;
+
+	browse)
+		OUT=$(eval $TOOL $CMDLINE --list \
+			| fzf \
+				--height=80% \
+				--header=$'\n?=Toggle Preview, ^T=Topics\n\nConsumer Groups' \
+				--bind='?:toggle-preview' \
+				--expect='ctrl-t' \
+				--preview-window=hidden:up:70% \
+				--preview "$TOOL $CMDLINE --describe --group {}")
+
+		GROUP_KEY=$(head -1 <<< "$OUT")
+		GROUP=$(tail -1 <<< "$OUT")
+		[ -z $GROUP ] && exit 0
+
+		case $GROUP_KEY in 
+
+			ctrl-t)
+				OUT=$(eval $TOOL $CMDLINE --describe --group $GROUP \
+					| fzf \
+					    --height=40% \
+						--header-lines=2 \
+						--header=$'\n^E=Reset to earliest, ^L=Reset to latest\n\nTopic offsets for '$GROUP \
+						--expect='ctrl-e,ctrl-l' \
+						--preview-window=hidden:up:70% \
+						--preview "echo {}" \
+					| awk '{print $2}')
+
+				TOPIC_KEY=$(head -1 <<< "$OUT")
+				TOPIC=$(tail -1 <<< "$OUT")
+				[ -z $TOPIC ] && exit 0
+
+				case $TOPIC_KEY in
+					ctrl-e)
+						echo $ME $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | clip-copy --tee
+						;;
+
+					ctrl-l)
+						echo $ME $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | clip-copy --tee
+						;;
+
+					*)
+						echo $ME $CMDLINE --group $GROUP --topic $TOPIC  | clip-copy --tee
+						;;
+				esac
+				;;
+
+			*)
+				echo $ME $CMDLINE --describe --group $GROUP | clip-copy --tee
+				;;
+
+		esac
+		;;
+
+	*)
+		eval $TOOL $CMD $CMDLINE
+		;;
+
+esac

@@ -1,0 +1,119 @@
+#!/bin/zsh
+
+[ -z "$KAFKA_HOME" ] && echo "KAFKA_HOME is not set" && exit 1
+
+log() {
+	[ -n "$TRACE" ] && echo '['$ME']' $* 
+}
+
+ME=$(basename $0)
+CFG=$KAFKA_HOME/config/${2:-server}.properties
+BIN=$KAFKA_HOME/bin
+
+# Search and source the startup script
+RC=.kafkarc
+CWD=$PWD
+while [ $PWD != "/" ]; do 
+	[ -f $RC ] && source $RC && RC=${PWD}/${RC} && break
+	cd .. 
+done
+cd $CWD
+log Startup script: $RC
+
+# Check command
+if [[ "$1" =~ ^[a-z_\-]*$ ]]; then
+	COMMAND=$1
+	[[ $# > 0 ]] && shift
+fi
+
+# Parse command line
+CMDLINE=
+while [ -n "$1" ]; do
+	if [[ "$1" =~ ^:.* ]]; then
+		VAR="${1[2,-1]:u}"
+		if [ -n "${(P)VAR}" ]; then
+			CMDLINE=$CMDLINE\ ${(P)VAR}
+		fi
+	else
+		CMDLINE=$CMDLINE\ $1
+	fi
+	[[ $# > 0 ]] && shift || break
+done
+
+# Dispatch to external command plugin
+if [ "$COMMAND" != "" ]; then
+	PLUGIN_NAME=$ME-$COMMAND
+	PLUGIN=$(command -v $PLUGIN_NAME)
+	if [ "$PLUGIN" != "" ]; then
+		log Dispatching to: $PLUGIN
+		eval $PLUGIN $CMDLINE
+		exit 0
+	fi
+fi
+
+case $COMMAND in
+
+	cmd)
+		echo $CMDLINE
+		exit 0
+		;;
+
+	start)
+		echo Using configuration from $CFG
+		eval $BIN/kafka-server-start.sh $CFG
+		;;
+
+	stop)
+		eval $BIN/kafka-server-stop.sh
+		;;
+
+	producer)
+		shift
+		if [ "$1" == "" ]; then
+			echo --broker-list localhost:9092 --topic name
+		else
+			eval $BIN/kafka-console-producer.sh $CMDLINE
+		fi
+		;;
+
+	consumer)
+		shift
+		if [ "$1" == "" ]; then
+			echo --bootstrap-server localhost:9092 --topic name --from-beginning
+		else
+			eval $BIN/kafka-console-consumer.sh $CMDLINE
+		fi
+		;;
+
+    clean)
+		echo Using configuration from $CFG
+        DATADIR=$(cat $CFG | grep log\.dirs | cut -d= -f2)
+        echo Deleting $DATADIR
+        rm -rf $DATADIR
+        ;;
+
+	clean-start)
+		$ME clean
+		$ME start
+		;;
+
+	configs)
+		shift
+		eval $KAFKA_HOME/bin/kafka-configs.sh $*
+		;;
+
+	groups)
+		$ME group browse $CMDLINE
+		;;
+
+	topics)
+		$ME topic browse $CMDLINE
+		;;
+
+	*)
+		echo unknown command: $1
+		;;
+esac
+exit 0
+		
+
