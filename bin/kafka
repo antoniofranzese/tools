@@ -68,17 +68,16 @@ case $COMMAND in
 		;;
 
 	producer)
-		shift
-		if [ "$1" == "" ]; then
+		if [ -z "$CMDLINE" ]; then
 			echo --broker-list localhost:9092 --topic name
 		else
+			CMDLINE=$(echo $CMDLINE | sed 's/bootstrap-server/broker-list/')
 			eval $BIN/kafka-console-producer.sh $CMDLINE
 		fi
 		;;
 
 	consumer)
-		shift
-		if [ "$1" == "" ]; then
+		if [ -z "$CMDLINE" ]; then
 			echo --bootstrap-server localhost:9092 --topic name --from-beginning
 		else
 			eval $BIN/kafka-console-consumer.sh $CMDLINE
@@ -98,7 +97,6 @@ case $COMMAND in
 		;;
 
 	configs)
-		shift
 		eval $KAFKA_HOME/bin/kafka-configs.sh $*
 		;;
 
