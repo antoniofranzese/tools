@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ -z "$ZOOKEEPER_HOME" ]; then
+	echo ZOOKEEPER_HOME is not set
+	exit 1
+fi
+
+CFG=$ZOOKEEPER_HOME/config/${2:-zookeeper}.properties
+echo Using configuration from $CFG
+
+case $1 in
+	start)
+		title zookeeper
+		$ZOOKEEPER_HOME/bin/zookeeper-server-start.sh $CFG
+		;;
+	stop)
+		$ZOOKEEPER_HOME/bin/zookeeper-server-stop.sh
+		;;
+	clean)
+		DATADIR=$(cat $CFG | grep dataDir | cut -d= -f2)
+		echo Deleting $DATADIR
+		rm -rf $DATADIR
+		;;
+	clean-start)
+		$0 clean
+		$0 start
+		;;
+	*)
+		echo unknown command: $1
+		;;
+esac
+
+		
+
