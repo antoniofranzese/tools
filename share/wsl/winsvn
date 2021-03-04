@@ -1,1 +1,26 @@
-/mnt/c/Program\ Files/TortoiseSVN/bin/svn.exe $* | dos2unix -q -1252
+#!zsh
+
+# Needs TortoiseSVN command line utilities, check them for inclusion during GUI installation.
+#
+# Needs Windows-native nvim, install with:
+# 	choco install neovim
+# or
+# 	scoop install neovim
+
+WINSVN=/mnt/c/Program\ Files/TortoiseSVN/bin/svn.exe
+
+# Extract first non-argument word from command line
+CMD=$(echo $* | sed -r 's/\-{1,2}[a-zA-Z0-9]*//g' | awk '{print $1}' )
+
+case $CMD in
+
+	# Interactive commands, no output conversion
+	ci|commit|copy|delete|mkdir|rmdir)
+		$WINSVN $*		
+		;;
+
+	# Non interactive commands, output converted
+	*) 
+		$WINSVN $* | dos2unix -q -1252
+		;;
+esac

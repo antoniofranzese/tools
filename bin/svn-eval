@@ -1,5 +1,18 @@
 #!/bin/zsh
 
+COPY=yes
+while true; do
+	case $1 in
+		--no-copy)
+			COPY=no
+			shift;
+			;;
+		*)	
+			break;
+			;;
+	esac
+done
+#
 #VAR="$(printf "%q" "${@}")"
 VAR=$1
 TARGET=${2:-.}
@@ -14,6 +27,9 @@ if [ -z "$VAR" ]; then
 	echo $PROPS
 else 
 	VALUE=$(echo $PROPS | egrep "^${VAR}=" | cut -d= -f2-)
-	echo $VALUE
-	echo -n $VALUE | clip-copy
+	if [ "$COPY" = "yes" ]; then
+		echo -n $VALUE | clip-copy --tee
+	else
+		echo $VALUE
+	fi
 fi
