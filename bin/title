@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#TODO: check tmux is running
+tmux rename-window "$*"
