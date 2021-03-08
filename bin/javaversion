@@ -1,0 +1,10 @@
+#!/bin/bash
+REGEX="^([0-9]+)\.([0-9]+).*" 
+VERSION=$(java -version 2>&1 |  awk -F '"' '/version/ {print $2}')
+MAJOR=$( echo $VERSION | sed -r "s/${REGEX}/\1/" )
+MINOR=$( echo $VERSION | sed -r "s/${REGEX}/\2/" )
+if [ "$MAJOR" == "1" ]; then
+	echo $MINOR
+else
+	echo $MAJOR
+fi

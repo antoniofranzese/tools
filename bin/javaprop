@@ -1,0 +1,4 @@
+#!/bin/bash
+
+PROPERTY=${1:-java\.version}
+echo $(java -XshowSettings:properties -version 2>&1 | grep "$PROPERTY =" | cut -d= -f2 | sed -e s/^\ *// | sed -e s/\ /_/ )
