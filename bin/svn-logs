@@ -15,7 +15,7 @@ case $1 in
 		$SVN diff -c $2 | delta --side-by-side --paging always
 		;;
 
-	lines)
+	raw-lines)
 		[[ $# > 0 ]] && shift
 		LINE=""
 		while read chunk; do
@@ -33,15 +33,21 @@ case $1 in
 		done <<< $($SVN log $* | grep -v "^$" )
 		;;
 
+	lines)
+		shift
+		$ME raw-lines $* \
+			| awk -F'|' '{printf "%-8s %-20.20s %.20s %s\n", $1, $2, $3, $5}'
+		;;
+
 	*)
 		URL=$(svn eval RelativeURL)
 		LOG_PATH=${1:-$URL}	
 		$ME lines $LOG_PATH \
-			| awk -F'|' '{printf "%-8s %-20.20s %.20s %s\n", $1, $2, $3, $5}' \
 			| fzf \
-				--header=$'\n^P: Diff Preview   ^V: View' \
+				--header=$'\n?: Preview  ^V: View  ^E: Edit log' \
 				--preview "$0 preview {1}" \
 				--bind "ctrl-v:execute($0 view {1})" \
-				--bind "ctrl-p:preview($0 diffs {1})"
+				--bind "ctrl-p:preview($0 diffs {1})" \
+				--bind "ctrl-e:execute(svn propedit -r {1} --revprop svn:log $URL)+reload($ME lines $LOG_PATH)"
 		;;
 esac
