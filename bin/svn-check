@@ -29,35 +29,56 @@ case $1 in
 		OUT=$(svn changes remote \
 			| fzf -m \
 				--no-sort \
+				--header=$'\n''^U=Update ^R=Revert ^Space=Select all' \
 				--header-lines=2 \
+				--bind='ctrl-space:select-all' \
 				--expect="ctrl-u,ctrl-r" \
 				--preview="$ME preview {4} {2}" \
 			| tr -s ' '
 		)
 		KEY=$(head -1 <<< $OUT)
 		ROWS=$(tail -n +2 <<< $OUT)
-		#echo names
-		#echo $ROWS
-		#echo key
-		#echo $KEY
 
 		case "$KEY" in
 
 			ctrl-u)
 				while read ROW; do
 					ARGS=( ${(s. .)ROW} )
-					echo svn update ${ARGS[4]} ${ARGS[2]}
+					STATUS=${ARGS[2]}
+					REMOTE_MOD=${STATUS[9]}
+					NAME=${ARGS[4]}
+				
+					if [ "$REMOTE_MOD" != "-" ]; then
+						echo Updating $NAME
+						$SVN update $NAME 
+					else
+						echo Skipping $NAME
+					fi
+					
 				done <<< $(echo $ROWS) 
 				reload
 				;;
 
 			ctrl-r)
-				echo $NAMES | awk '{print $4}' | xargs -n1 echo svn revert
+				while read ROW; do
+					ARGS=( ${(s. .)ROW} )
+					STATUS=${ARGS[2]}
+					LOCAL_MOD=${STATUS[1]}
+					NAME=${ARGS[4]}
+				
+					if [ "$LOCAL_MOD" != "-" ]; then
+						echo Reverting $NAME
+						$SVN revert $NAME 
+					else
+						echo Skipping $NAME
+					fi
+					
+				done <<< $(echo $ROWS) 
 				reload
 				;;
 
 			*)
-				echo Other
+				#echo Other
 				;;
 
 		esac
