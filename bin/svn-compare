@@ -1,0 +1,83 @@
+#!/bin/zsh
+
+ITEM=$1
+FOLDER=$ITEM:h
+NAME=$ITEM:t:r
+EXT=$ITEM:t:e
+LOCAL=${NAME}.${EXT}
+
+pushd $FOLDER > /dev/null
+
+STATUS=$(svn changes $LOCAL | tail -1 | awk '{print $2}' | cut -c1 )
+
+case "$STATUS" in
+	\?)
+		echo "Unversioned item: $ITEM" 
+		exit 1
+		;;
+	C)
+		CONFLICT='yes'
+		;;
+esac
+
+if [ -z "$CONFLICT" ]; then	
+	echo Checking $LOCAL last revision
+	REV=$(svn changes remote $LOCAL | tail -1 | awk '{print $3}' )
+
+	[ "$REV" = "revision:" ] && echo "No changes" && exit 0
+	
+	EDIT=$LOCAL
+
+	BASE=${NAME}.BASE.${EXT}
+	eval $SVN cat ${LOCAL}@BASE > $BASE
+
+	OTHER=${NAME}.${REV}.${EXT}
+	eval $SVN cat ${LOCAL}@${REV} > $OTHER
+	
+	trap "rm -f $FOLDER/$BASE $FOLDER/$OTHER" 0 1 2 5 15
+
+else
+	echo Comparing $LOCAL conflicts
+
+	BASE=$(svn eval ConflictPreviousBaseFile $LOCAL )
+	EDIT=$(svn eval ConflictPreviousWorkingFile $LOCAL )
+	OTHER=$(svn eval ConflictCurrentBaseFile $LOCAL )
+
+fi
+
+if [ -n "$MERGE_TOOL" ]; then
+	eval $MERGE_TOOL $BASE $EDIT $OTHER 
+else
+	vi -d \
+		-c "wincmd l" \
+		-c "set modifiable" \
+		-c "set write" \
+		-M $BASE $EDIT $OTHER 
+fi
+
+if [ $? = 0 ]; then
+	if [ -n "$CONFLICT" ]; then
+		echo -n "Resolve conflicts: (m)ine, (t)heirs, (b)ase, or any other to ignore "
+		KEY=$(read -sk1 -e )
+		echo
+		case "$KEY" in
+			m)
+				echo Resolving with mine
+				eval $SVN resolve --accept mine-full $LOCAL
+				;;
+			t) 
+				echo Resolving with theirs
+				eval $SVN resolve --accept theirs-full $LOCAL
+				;;
+			b) 
+				echo Resolving with base
+				eval $SVN resolve --accept base $LOCAL
+				;;
+		esac
+	fi
+else
+	echo Cancelled
+fi
+
+popd > /dev/null
+

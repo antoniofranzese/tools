@@ -20,34 +20,53 @@ case $1 in
 		;;
 
 	add)
-		TARGET=$2
+		LIST=$2
+		FILE=$3
 
-		[ -z $TARGET ] && echo "Missing target list" && exit 1
-		[ "$TARGET" = "/" ] && echo "Cannot add to root list" && exit 1
-		[ $( $0 list / | wc -l ) -eq 0 ] && echo "Nothing to add" && exit 0
+		[ -z $LIST ] && echo "Missing target list" && exit 1
+		[ "$LIST" = "/" ] && echo "Cannot add to root list" && exit 1
 
-		$0 list / \
-			| fzf ${FZF[@]} \
-			| awk '{ print $2 }' \
-			| xargs -n1 $SVN changelist $TARGET
+		if [ -z "$FILE" ]; then
+			[ $( $0 list / | wc -l ) -eq 0 ] && echo "Nothing to add" && exit 0
+
+			$0 list / \
+				| fzf ${FZF[@]} \
+				| awk '{ print $2 }' \
+				| xargs -n1 $SVN changelist $LIST
+		else
+			$SVN changelist $LIST $FILE
+		fi
 		;;
 
 			#| fzf -m --preview-window="up:70%" --preview="$PREVIEW" \
 	remove)
-		SOURCE=$2
+		LIST=$2
+		FILE=$3
 
-		[ -z $SOURCE ] && echo "Missing source list" && exit 1
-		[ "$SOURCE" = "/" ] && echo "Cannot remove from root list" && exit 1
-		[ $( $0 list $SOURCE | wc -l ) -eq 0 ] && echo "Nothing to remove" && exit 0
+		[ -z $LIST ] && echo "Missing source list" && exit 1
+		[ "$LIST" = "/" ] && echo "Cannot remove from root list" && exit 1
+		[ $( $0 list $LIST | wc -l ) -eq 0 ] && echo "Nothing to remove" && exit 0
 
-		$0 list $SOURCE \
-			| fzf ${FZF[@]} \
+		if [ -z "$FILE" ]; then
+			$0 list $LIST \
+				| fzf ${FZF[@]} \
+				| awk '{ print $2 }' \
+				| xargs -n1 $SVN changelist --remove 
+		else
+			$SVN changelist --remove $FILE
+		fi
+		;;
+	
+	reset)
+		LIST=$2
+		$0 list $LIST \
 			| awk '{ print $2 }' \
-			| xargs -n1 $SVN changelist --remove $TARGET
+			| xargs -n1 $SVN changelist --remove 
 		;;
 
 	commit)
-		$SVN commit --changelist $2
+		LIST=$2
+		$SVN commit --changelist $LIST
 		;;
 
 	preview)
@@ -65,6 +84,7 @@ case $1 in
 		;;
 
 	remote)
+		TARGET=${2:-.}
 		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
 		LS=/
 		while read LINE; do
@@ -78,26 +98,25 @@ case $1 in
 				printf "%-${LEN}s  %s %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[22,-1]}"
 				echo
 			fi
-		done <<< $( svn status -u | grep -v "^$" | sed -e "s/^/#/" )
-		;;
-
-	"")
-		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
-		LS=/
-		while read LINE; do
-			if [[ "$LINE" =~ ^\--- ]]; then
-				LS=$( echo $LINE | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/" )
-			elif [[ "$LINE" =~ ^Revision ]]; then
-				echo $LINE
-			else
-				STATUS=$( echo ${LINE[1,7]} | sed -e "s/\ /-/g" )
-				REV=$( $SVN info ${LINE[9,-1]} 2>&1 | egrep "^Revision:" | awk '{print $2}' )
-				printf "%-${LEN}s  %s--- %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[8,-1]}"
-				echo
-			fi
-		done <<< $( svn status | grep -v "^$" )
+		done <<< $( svn status -u $TARGET | grep -v "^$" | sed -e "s/^/#/" )
 		;;
 
 	*)
-		echo Unknown $ME command: $1
+		TARGET=${1:-.}
+		LEN=$( $0 lists | awk '{print length}' | sort -nr | head -1 )
+		LS=/
+		while read LINE; do
+			if [[ "$LINE" =~ ^#\--- ]]; then
+				echo $LINE[2,-1]
+			elif [[ "$LINE" =~ ^#(Revision|Status) ]]; then
+				echo $LINE[2,-1]
+			else
+				STATUS=$( echo ${LINE[2,8]} | sed -e "s/\ /-/g" )
+				REV=$( $SVN info ${LINE[10,-1]} 2>&1 | egrep "^Revision:" | awk '{print $2}' )
+				printf "%-${LEN}s  %s--- %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[9,-1]}"
+				echo
+			fi
+		done <<< $( svn status $TARGET | grep -v "^$" | sed -e "s/^/#/" )
+		;;
+
 esac

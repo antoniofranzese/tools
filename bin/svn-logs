@@ -47,7 +47,7 @@ case $1 in
 				--header=$'\n?: Preview  ^V: View  ^E: Edit log' \
 				--preview "$0 preview {1}" \
 				--bind "ctrl-v:execute($0 view {1})" \
-				--bind "ctrl-p:preview($0 diffs {1})" \
+				--bind "?:preview($0 diffs {1})" \
 				--bind "ctrl-e:execute(svn propedit -r {1} --revprop svn:log $URL)+reload($ME lines $LOG_PATH)"
 		;;
 esac

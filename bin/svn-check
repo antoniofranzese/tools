@@ -3,9 +3,12 @@
 ME=$(basename $0)
 CMDLINE=$*
 
-reload() {
+confirm() {
 	echo 'Press any key to continue...'
 	read -k1 -s
+}
+
+reload() {
 	eval $ME $CMDLINE
 }
 
@@ -29,10 +32,10 @@ case $1 in
 		OUT=$(svn changes remote \
 			| fzf -m \
 				--no-sort \
-				--header=$'\n''^U=Update ^R=Revert ^Space=Select all' \
+				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^Space=Select all' \
 				--header-lines=2 \
 				--bind='ctrl-space:select-all' \
-				--expect="ctrl-u,ctrl-r" \
+				--expect="ctrl-u,ctrl-r,ctrl-m" \
 				--preview="$ME preview {4} {2}" \
 			| tr -s ' '
 		)
@@ -50,12 +53,13 @@ case $1 in
 				
 					if [ "$REMOTE_MOD" != "-" ]; then
 						echo Updating $NAME
-						$SVN update $NAME 
+						$SVN update --parents $NAME 
 					else
 						echo Skipping $NAME
 					fi
 					
 				done <<< $(echo $ROWS) 
+				confirm
 				reload
 				;;
 
@@ -74,11 +78,39 @@ case $1 in
 					fi
 					
 				done <<< $(echo $ROWS) 
+				confirm
+				reload
+				;;
+
+			ctrl-m)
+				ROW=$(echo $ROWS | tail -1 )
+				ARGS=( ${(s. .)ROW} )
+				STATUS=${ARGS[2]}
+				LOCAL_MOD=${STATUS[1]}
+				NAME=${ARGS[4]}
+
+				if [ "$LOCAL_MOD" != "-" ]; then
+					echo Merging $NAME
+					svn compare $NAME 
+				else
+					echo Skipping $NAME
+					confirm
+				fi
+				
 				reload
 				;;
 
 			*)
-				#echo Other
+				#ROW=$(echo $ROWS | tail -1 )
+				#ARGS=( ${(s. .)ROW} )
+				#STATUS=${ARGS[2]}
+				#REV=${ARGS[3]}
+				#NAME=${ARGS[4]}
+
+				#[ -z "$NAME" ] && exit 0	
+
+				#[ "$REV" != "?" ] && SUFFIX=@${REV} || SUFFIX=''
+				#echo -n ${NAME}${SUFFIX} | clip-copy --tee	
 				;;
 
 		esac

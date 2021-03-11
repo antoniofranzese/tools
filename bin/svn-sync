@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+$SVN ls -R $* | xargs -n1 $SVN update
