@@ -5,6 +5,8 @@ FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
 if [ -z "$1" ]; then
 	$SVN status | grep "^\\?" \
 		| fzf ${FZF[@]} \
+			--header=$'\n''^Space=Select all' \
+			--bind='ctrl-space:select-all' \
 		| awk '{ print $2 }' \
 		| xargs -n1 $SVN add 
 else

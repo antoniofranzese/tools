@@ -18,4 +18,4 @@ else
 	TAG_URL=$URL
 fi
 
-echo svn copy \'$URL\' \'$TAG_URL\' $CMDLINE
+echo -n "svn copy \'$URL\' \'$TAG_URL\' $CMDLINE" | clip-copy --tee

@@ -7,6 +7,8 @@ case "$1" in
 	'')
 		$SVN status | grep "^\\?" \
 			| fzf ${FZF[@]} \
+				--header=$'\n''^Space=Select all' \
+				--bind='ctrl-space:select-all' \
 			| awk '{ print $2 }' \
 			| xargs -n1 $ME add 
 
@@ -31,6 +33,8 @@ case "$1" in
 		if [ -z "$2" ]; then
 			$ME list \
 				| fzf -m \
+					--header=$'\n''^Space=Select all' \
+					--bind='ctrl-space:select-all' \
 				| xargs -n1 $ME remove 
 		else
 			TMP=$(mktemp)

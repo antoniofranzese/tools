@@ -31,6 +31,8 @@ case $1 in
 
 			$0 list / \
 				| fzf ${FZF[@]} \
+					--header=$'\n''^Space=Select all' \
+					--bind='ctrl-space:select-all' \
 				| awk '{ print $2 }' \
 				| xargs -n1 $SVN changelist $LIST
 		else
@@ -50,6 +52,8 @@ case $1 in
 		if [ -z "$FILE" ]; then
 			$0 list $LIST \
 				| fzf ${FZF[@]} \
+					--header=$'\n''^Space=Select all' \
+					--bind='ctrl-space:select-all' \
 				| awk '{ print $2 }' \
 				| xargs -n1 $SVN changelist --remove 
 		else
