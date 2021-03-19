@@ -1,0 +1,31 @@
+#!/bin/zsh
+
+case "$1" in
+	version)
+		shift
+		MAJOR=$(javap -verbose $* | grep "major" | awk '{print $3}')
+		case "$MAJOR" in
+			46) VERSION="Java 1.2" ;;
+			47) VERSION="Java 1.3" ;;
+			48) VERSION="Java 1.4" ;;
+			49) VERSION="Java 5" ;;
+			50) VERSION="Java 6" ;;
+			51) VERSION="Java 7" ;;
+			52) VERSION="Java 8" ;;
+			53) VERSION="Java 9" ;;
+			54) VERSION="Java 10" ;;
+			55) VERSION="Java 11" ;;
+			56) VERSION="Java 12" ;;
+			57) VERSION="Java 13" ;;
+			58) VERSION="Java 14" ;;
+			59) VERSION="Java 15" ;;
+			*) VERSION="Version $MAJOR" ;;
+		esac
+ 
+		echo $VERSION
+		;;
+
+	*)
+		javap -verbose $*
+		;;
+esac
