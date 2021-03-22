@@ -114,6 +114,10 @@ case $1 in
 				echo $LINE[2,-1]
 			elif [[ "$LINE" =~ ^#(Revision|Status) ]]; then
 				echo $LINE[2,-1]
+			elif [[ "$LINE" =~ Summary.* ]]; then
+				# do nothing
+			elif [[ "$LINE" =~ Text\ conflicts: ]]; then
+				# do nothing
 			else
 				STATUS=$( echo ${LINE[2,8]} | sed -e "s/\ /-/g" )
 				REV=$( $SVN info ${LINE[10,-1]} 2>&1 | egrep "^Revision:" | awk '{print $2}' )
