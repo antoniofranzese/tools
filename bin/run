@@ -15,6 +15,7 @@ log() {
 
 # Search and source the startup script
 RC=.${ME}rc
+[ -f $HOME/$RC ] && source $HOME/$RC
 CWD=$PWD
 while [ $PWD != "/" ]; do 
 	[ -f $RC ] && source $RC && RC=${PWD}/${RC} && break
