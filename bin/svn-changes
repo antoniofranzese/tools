@@ -111,7 +111,7 @@ case $1 in
 		LS=/
 		while read LINE; do
 			if [[ "$LINE" =~ ^#\--- ]]; then
-				echo $LINE[2,-1]
+				LS=$( echo $LINE | awk '{print $3}' | sed -e "s/^'\([^']*\)':/\1/" )
 			elif [[ "$LINE" =~ ^#(Revision|Status) ]]; then
 				echo $LINE[2,-1]
 			elif [[ "$LINE" =~ Summary.* ]]; then

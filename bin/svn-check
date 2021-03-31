@@ -32,10 +32,10 @@ case $1 in
 		OUT=$(svn changes remote \
 			| fzf -m \
 				--no-sort \
-				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^Space=Select all' \
+				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^Space=Select all | ^S=Stage ^X=Unstage ^T=Commit' \
 				--header-lines=2 \
 				--bind='ctrl-space:select-all' \
-				--expect="ctrl-u,ctrl-r,ctrl-m" \
+				--expect="ctrl-u,ctrl-r,ctrl-m,ctrl-s,ctrl-x,ctrl-t" \
 				--preview="$ME preview {4} {2}" \
 			| tr -s ' '
 		)
@@ -97,6 +97,88 @@ case $1 in
 					confirm
 				fi
 				
+				reload
+				;;
+
+			ctrl-s)
+				while read ROW; do
+					ARGS=( ${(s. .)ROW} )
+					LIST=${ARGS[1]}
+					STATUS=${ARGS[2]}
+					LOCAL_MOD=${STATUS[1]}
+					NAME=${ARGS[4]}
+					
+					PROCESS=Y
+
+					if [ "$LOCAL_MOD" = "?" ]; then
+						echo Adding $NAME
+						$SVN add $NAME 
+					elif [ "$LOCAL_MOD" != "M" ]; then
+						PROCESS=N
+					fi
+
+					if [ "$LIST" = "stage" ]; then
+						PROCESS=N
+					fi
+
+					if [ "$PROCESS" = "Y" ]; then
+						echo Staging $NAME
+						svn changes add stage $NAME
+					else
+						echo Skipping $NAME
+					fi
+					
+				done <<< $(echo $ROWS) 
+
+				svn changes list stage
+				echo -n "Staged files: (c)ommit, or any other to ignore "
+				KEY=$(read -sk1 -e )
+				echo
+				case "$KEY" in
+					c)
+						svn changes commit stage
+						confirm
+						;;
+				esac
+				reload
+				;;
+
+			ctrl-x)
+				while read ROW; do
+					ARGS=( ${(s. .)ROW} )
+					LIST=${ARGS[1]}
+					NAME=${ARGS[4]}
+					
+					if [ "$LIST" = "stage" ]; then
+						PROCESS=N
+						echo Unstaging $NAME
+						svn changes remove stage $NAME
+					else
+						echo Skipping $NAME
+					fi
+					
+				done <<< $(echo $ROWS) 
+				confirm
+				reload
+				;;
+
+			ctrl-t)
+				PROCESS=N
+				while read ROW; do
+					ARGS=( ${(s. .)ROW} )
+					LIST=${ARGS[1]}
+					
+					if [ "$LIST" = "stage" ]; then
+						PROCESS=Y
+					fi
+				done <<< $(svn changes remote) 
+				
+				if [ "$PROCESS" = "Y" ]; then
+					svn changes commit stage
+				else
+					echo Nothing to commit, stage something
+				fi
+				confirm
 				reload
 				;;
 

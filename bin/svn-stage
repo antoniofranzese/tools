@@ -1,2 +1,4 @@
 #!/bin/zsh
-svn changes $* stage
+CMD=$1
+[[ $# > 0 ]] && shift
+eval svn changes $CMD stage $*
