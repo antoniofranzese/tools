@@ -12,8 +12,8 @@ pod|pods)
 		| fzf \
 			--header-lines=1 \
 			--preview-window=up:60% \
-			--preview '$KUBECTL describe pod {2} -n {1} | bat -l yaml --color=always --style=plain' \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}'
+			--preview "$KUBECTL describe pod {2} -n {1} | bat -l yaml --color=always --style=plain" \
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
 dep|deps)
@@ -21,8 +21,8 @@ dep|deps)
 		| fzf \
 			--header-lines=1 \
 			--preview-window=up:60% \
-			--preview '$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain' \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}'
+			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
 maps)
@@ -30,8 +30,17 @@ maps)
 		| fzf \
 			--header-lines=1 \
 			--preview-window=up:60% \
-			--preview '$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain' \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' \
+			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+	;;
+
+secrets)
+	$KUBECTL get secrets --all-namespaces \
+		| fzf \
+			--header-lines=1 \
+			--preview-window=up:60% \
+			--preview "$KUBECTL get secret {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
 exec)
@@ -58,7 +67,7 @@ restart)
 		| fzf -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
-			--preview 'kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain' \
+			--preview "kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
 		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0
     ;;
@@ -70,14 +79,14 @@ scale)
 		| fzf -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
-			--preview '$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain' \
+			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
 		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0
 	;;
 
 copy-secret)
 	shift
-	if [ "$3" == "" ]; then
+	if [ "$3" = "" ]; then
 		echo "$ME copy-secret <secret> <source namespace> <target namespace>"
 		exit 0
 	else
