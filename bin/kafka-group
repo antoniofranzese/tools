@@ -17,10 +17,12 @@ case $CMD in
 
 	browse)
 		OUT=$(eval $TOOL $CMDLINE --list \
+			| sort \
 			| fzf \
 				--height=80% \
-				--header=$'\n?=Toggle Preview, ^T=Topics\n\nConsumer Groups' \
+				--header=$'\n?=Toggle Preview, ^P=Refresh Preview, ^T=Topics\n\nConsumer Groups' \
 				--bind='?:toggle-preview' \
+				--bind='ctrl-p:refresh-preview' \
 				--expect='ctrl-t' \
 				--preview-window=hidden:up:70% \
 				--preview "$TOOL $CMDLINE --describe --group {}")
@@ -66,6 +68,17 @@ case $CMD in
 				;;
 
 		esac
+		;;
+
+	offsets)
+		$ME $CMDLINE --all-groups --describe 2>&1 \
+			| grep -v "^$" \
+			| grep -v "^GROUP" \
+			| grep -v "^Consumer group" \
+			| awk '{print $1, $2, $3, $4, $5, $6}' \
+			| prepend "GROUP TOPIC PARTITION CURRENT-OFFSET LOG-END-OFFSET LAG" \
+			| column -t \
+			| fzf --header-lines=1
 		;;
 
 	*)
