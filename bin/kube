@@ -11,8 +11,11 @@ pod|pods)
 	$KUBECTL get pods --all-namespaces \
 		| fzf \
 			--header-lines=1 \
+			--header="^R=Reload List  ^P=Refresh Preview" \
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe pod {2} -n {1} | bat -l yaml --color=always --style=plain" \
+			--bind="ctrl-r:reload($KUBECTL get pods --all-namespaces)" \
+			--bind="ctrl-p:refresh-preview" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
@@ -20,8 +23,11 @@ dep|deps)
 	$KUBECTL get deployments --all-namespaces \
 		| fzf \
 			--header-lines=1 \
+			--header="^R=Reload List  ^P=Refresh Preview" \
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
+			--bind="ctrl-r:reload($KUBECTL get deployments --all-namespaces)" \
+			--bind="ctrl-p:refresh-preview" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
@@ -29,8 +35,10 @@ maps)
 	$KUBECTL get configmaps --all-namespaces \
 		| fzf \
 			--header-lines=1 \
+			--header "^S=Save" \
 			--preview-window=up:60% \
 			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
+			--bind "ctrl-s:execute($KUBECTL get configmap {2} -n {1} -o yaml > {2}.yaml)" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
@@ -53,7 +61,13 @@ shell)
 	;;
 
 follow)
-	$KUBECTL logs --follow `$ME pod`
+	if [ -z "$2" ]; then
+		POD=`$ME pod` 
+	else
+		shift
+		POD=$*
+	fi
+	eval $KUBECTL logs --follow $POD
 	;;
 
 forward)
