@@ -23,9 +23,9 @@ case "$1" in
 		[ -z "$2" ] && echo "Missing ignore pattern" && exit 1
 		TMP=$(mktemp)
 		trap "rm -f $TMP" 0 1 2 5 15
-		
+
 		$ME list | grep -v "$2" > $TMP
-		echo $2 >> $TMP
+		echo -e $2 >> $TMP
 		$SVN propset svn:ignore -F $TMP .
 		;;
 

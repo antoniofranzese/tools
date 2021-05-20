@@ -163,20 +163,20 @@ case $1 in
 				;;
 
 			ctrl-t)
-				PROCESS=N
+				STAGED=N
 				while read ROW; do
 					ARGS=( ${(s. .)ROW} )
 					LIST=${ARGS[1]}
 					
 					if [ "$LIST" = "stage" ]; then
-						PROCESS=Y
+						STAGED=Y
 					fi
 				done <<< $(svn changes remote) 
 				
-				if [ "$PROCESS" = "Y" ]; then
+				if [ "$STAGED" = "Y" ]; then
 					svn changes commit stage
 				else
-					echo Nothing to commit, stage something
+					svn commit
 				fi
 				confirm
 				reload

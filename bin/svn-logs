@@ -4,20 +4,21 @@ ME=$(basename $0)
 
 case $1 in
 	preview)
-		$SVN log -v -c $2
+		$SVN log $2 -v -c $3
 		;;
 
 	diffs)
-		$SVN diff -c $2 | delta --paging never --line-numbers
+		$SVN diff $2 -c $3 | delta --paging never --line-numbers
 		;;
 	
 	view)
-		$SVN diff -c $2 | delta --side-by-side --paging always
+		$SVN diff $2 -c $3 | delta --side-by-side --paging always
 		;;
 
 	raw-lines)
 		[[ $# > 0 ]] && shift
 		LINE=""
+		FIELD=0
 		while read chunk; do
 
 			if [[ "$chunk" =~ ^\--- ]]; then
@@ -25,9 +26,13 @@ case $1 in
 					echo $LINE
 				fi
 				LINE=""
+				FIELD=0
 			else
-				[ -n "$LINE" ] && LINE=$LINE\ \|
+				if [[ -n "$LINE" && "$FIELD" = "1" ]]; then
+					LINE=$LINE\ \|
+				fi
 				LINE=$LINE\ $chunk
+				(( FIELD += 1 ))
 			fi
 
 		done <<< $($SVN log $* | grep -v "^$" )
@@ -40,14 +45,26 @@ case $1 in
 		;;
 
 	*)
-		URL=$(svn eval RelativeURL)
-		LOG_PATH=${1:-$URL}	
-		$ME lines $LOG_PATH \
+		ARGS=
+		if [ -n "$1" ]; then
+			while [ -n "$1" ]; do
+				if [[ "$1" =~ ^http.* ]]; then
+					URL="$1"
+				else
+					ARGS=$ARGS\ $1
+				fi
+				[[ $# > 0 ]] && shift || break
+			done
+		else
+			URL=$(svn eval RelativeURL)
+		fi	
+
+		eval $ME lines $ARGS $URL \
 			| fzf \
-				--header=$'\n?: Preview  ^V: View  ^E: Edit log' \
-				--preview "$0 preview {1}" \
-				--bind "ctrl-v:execute($0 view {1})" \
-				--bind "?:preview($0 diffs {1})" \
+				--header=$'\n?=Preview, ^V=View, ^E=Edit log\n'"Logs for $URL" \
+				--preview "$0 preview ${URL} {1}" \
+				--bind "ctrl-v:execute($0 view ${URL} {1})" \
+				--bind "?:preview($0 diffs ${URL} {1})" \
 				--bind "ctrl-e:execute(svn propedit -r {1} --revprop svn:log $URL)+reload($ME lines $LOG_PATH)"
 		;;
 esac
