@@ -1,0 +1,122 @@
+#!/bin/zsh
+
+function cleanup() {
+	echo $(echo $* | tr -d '\n' | tr -d '\r' )
+}
+
+SOURCE=
+COLORS=y
+VERBOSE=0
+while [[ $# > 0 ]]; do
+	case "$1" in
+		--no-colors|--monochrome)
+			COLORS=n
+			shift
+			;;
+
+		-v|--verbose)
+			VERBOSE=1
+			shift
+			;;
+
+		-vv|--very-verbose)
+			VERBOSE=2
+			shift
+			;;
+
+		-)
+			SOURCE=
+			shift
+			;;
+
+		*)
+			SOURCE=$1
+			shift
+			;;
+	esac
+done
+
+METHOD=GET
+URL='http://localhost'
+HTTP='HTTP/1.1'
+HEADERS=
+SECTION=url
+
+BODY=$(mktemp)
+RESPONSE=$(mktemp)
+trap "rm -f $BODY $RESPONSE" 0 1 2 5 15
+
+while read LINE; do
+	LINE=$(cleanup $LINE)
+	case "$SECTION" in
+		url)
+			method=$(echo $LINE | awk '{print $1}')
+			[ -n "$method" ] && METHOD=$method
+
+			url=$(echo $LINE | awk '{print $2}')
+			[ -n "$url" ] && URL=$url
+
+			http=$(echo $LINE | awk '{print $3}')
+			[ -n "$http" ] && HTTP=$http
+
+			SECTION=headers
+			;;
+
+		headers)
+			if [ -n "$LINE" ]; then
+				HEADERS=$HEADERS\ -H\ \"$LINE\"
+			else 
+				SECTION=body
+			fi
+			;;
+
+		body)
+			echo $LINE >> $BODY
+			;;
+	esac
+
+done <<< $(cat $SOURCE | grep -v "^\\/\\*"  )
+
+[ "$VERBOSE" -ge 2 ] && SILENT="" || SILENT="--silent "
+CMDLINE="curl $SILENT --include -X $METHOD $HEADERS -d \"@${BODY}\" --output $RESPONSE $URL"
+[ "$VERBOSE" -ge 1 ] && echo $CMDLINE $'\n'
+
+eval $CMDLINE
+
+CONTENT=text/plain
+SECTION=headers
+
+if [ -f $RESPONSE ]; then
+	while read LINE; do
+		case "$SECTION" in
+			headers)
+				LINE=$(cleanup $LINE )
+				if [ -n "$LINE" ]; then
+					echo $LINE
+					[[ "$LINE" =~ ^[Cc]ontent-[Tt]ype ]] && CONTENT=$(echo $LINE | awk '{print $2}')
+				else 
+					SECTION=body
+					echo -n "" > $BODY
+					echo ""
+				fi
+				;;
+
+			body)
+				echo $LINE >> $BODY
+				;;
+		esac
+
+	done <<< $(cat $RESPONSE)
+fi
+
+if [ -f $BODY ]; then
+	case $CONTENT in
+		application/json)
+			[ "$COLORS" = "y" ] && JQ=-C || JQ=-M
+			cat $BODY | jq $JQ
+			;;
+		*)
+			cat $BODY
+			;;
+	esac
+fi
