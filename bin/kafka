@@ -70,7 +70,7 @@ case $COMMAND in
 
 	producer)
 		if [ -z "$CMDLINE" ]; then
-			echo --broker-list localhost:9092 --topic name
+			echo " --broker-list localhost:9092 --topic name" | clip-copy --tee
 		else
 			CMDLINE=$(echo $CMDLINE | sed 's/bootstrap-server/broker-list/')
 			eval $BIN/kafka-console-producer.sh $CMDLINE
@@ -79,7 +79,7 @@ case $COMMAND in
 
 	consumer)
 		if [ -z "$CMDLINE" ]; then
-			echo --bootstrap-server localhost:9092 --topic name --from-beginning
+			echo " --bootstrap-server localhost:9092 --topic name --from-beginning" | clip-copy --tee 
 		else
 			eval $BIN/kafka-console-consumer.sh $CMDLINE
 		fi

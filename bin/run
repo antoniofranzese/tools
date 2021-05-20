@@ -21,6 +21,8 @@ while [ $PWD != "/" ]; do
 	[ -f $RC ] && source $RC && RC=${PWD}/${RC} && break
 	cd .. 
 done
+[ $PWD = "/" ] && RC=$HOME/$RC 
+[ -f $RC ] || touch $RC;
 cd $CWD
 log Startup script: $RC
 

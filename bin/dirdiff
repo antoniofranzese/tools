@@ -47,9 +47,10 @@ case $CMD in
 			| fzf --ansi -m \
 				--height="100%" \
 				--preview="$ME preview $DIR1 $DIR2 {1} {2}" \
-				--header=$'\n'"<enter>=Merge  ^W=overWrite(L>R) ^R=Rescan "$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
+				--header=$'\n'"<enter>=Merge,  ^W=overWrite(L>R), ^R=Rescan, ^S=Swap"$'\n'"<< $DIR1"$'\n'"  >> $DIR2" \
 				--bind="enter:execute( $ME merge $DIR1 $DIR2 {1} {2} )+reload( $ME list $DIR1 $DIR2 )" \
 				--bind="ctrl-r:reload( $ME list $DIR1 $DIR2 )" \
+				--bind="ctrl-s:execute( $ME browse $DIR2 $DIR1 )+abort" \
 				--bind="ctrl-w:execute-multi( $ME overwrite $DIR1 $DIR2 {} )+reload( $ME list $DIR1 $DIR2 )"
 			#| xargs $ME cmdline $DIR1 $DIR2 
 		;;

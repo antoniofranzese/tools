@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 while true; do
 	case $1 in
@@ -34,7 +34,7 @@ case $(platform) in
 		;;
 esac
 
-if [ -n "$(tmux running)" ]; then
+if [ -n "$TMUX" ]; then
 	tmux copy $TEXT
 fi
 

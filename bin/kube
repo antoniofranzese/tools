@@ -2,6 +2,11 @@
 #
 # kubectl wrapper 0.4
 #
+function execute() {
+	CMD="$*"
+	echo $CMD | clip-copy --tee
+	eval $CMD
+}
 
 KUBECTL=${KUBECTL_EXECUTABLE:-/usr/bin/kubectl}
 ME=$(basename $0)
@@ -52,8 +57,8 @@ secrets)
 	;;
 
 exec)
-	CMD=${2:-/bin/sh}
-	eval $KUBECTL exec --stdin --tty `$ME pod` -- $CMD	
+	EXEC=${2:-/bin/sh}
+	execute $KUBECTL exec --stdin --tty `$ME pod` -- $EXEC
 	;;
 
 shell)
@@ -67,27 +72,25 @@ follow)
 		shift
 		POD=$*
 	fi
-	eval $KUBECTL logs --follow $POD
+	execute $KUBECTL logs --follow $POD
 	;;
 
 forward)
 	[ -z "$2" ] && echo Missing port number && exit 0
-	$KUBECTL port-forward `$ME pod` $2:${3:-$2}
+	execute $KUBECTL port-forward `$ME pod` ${3:-$2}:$2
 	;;
 
 restart)
-	#echo $KUBECTL rollout restart deployment $(kube deps)
 	$KUBECTL get deployments --all-namespaces \
 		| fzf -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0
+		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | clip-copy --tee
     ;;
 
 scale)
-	#echo $KUBECTL scale deployment `$0 dep` --replicas=${2:-0}
 	REPS=${2:-0}
 	$KUBECTL get deployments --all-namespaces \
 		| fzf -m \
@@ -95,15 +98,36 @@ scale)
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0
+		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0 | clip-copy --tee
+	;;
+
+export)
+	shift
+	case ${1:-help} in
+	secret)
+		shift
+		[ -n "$1" ] && SECRET="$*" || SECRET=`$ME secrets`
+		eval $KUBECTL get secret $SECRET -o yaml \
+			| yq eval 'del(.metadata.resourceVersion)' - \
+			| yq eval 'del(.metadata.uid)' - \
+			| yq eval 'del(.metadata.annotations)' - \
+			| yq eval 'del(.metadata.creationTimestamp)' - \
+			| yq eval 'del(.metadata.selfLink)' - \
+			| yq eval 'del(.metadata.namespace)' - \
+		;;
+	help)
+		echo $ME export [ secret ]
+		;;
+	esac
 	;;
 
 copy-secret)
 	shift
-	if [ "$3" = "" ]; then
+	if [ -z "$3" ]; then
 		echo "$ME copy-secret <secret> <source namespace> <target namespace>"
 		exit 0
 	else
+		#$ME export secret $1 -n $2 | $KUBECTL apply --namespace=$3 -f -
 		$KUBECTL get secret $1 -n $2 -o yaml \
 			| yq eval 'del(.metadata.resourceVersion)' - \
 			| yq eval 'del(.metadata.uid)' - \
@@ -119,17 +143,16 @@ help)
 	echo $(basename $ME) \<command\> \<arguments\>
 	echo
 	echo "Pod commands:"
-	echo "  pod                       Returns kubectl pod params"
-	echo "  exec  <cmd>               Executes command in pod"
-	echo "  shell                     Open shell in pod"
-	echo "  follow                    Follows pod log"
-	echo "  forward  <p1> [<p2>]      Forwards pod port to local port"
+	echo "  pods                        Returns kubectl pod params"
+	echo "  exec  <cmd>                 Executes command in pod"
+	echo "  shell                       Open shell in pod"
+	echo "  follow                      Follows pod log"
+	echo "  forward <remote> [<local>]  Forwards pod port to local port"
 	echo
 	echo "Deployment commands:"
-	echo "  dep                       Returns kubectl deployment params"
-	echo "  deps                      Search deployments"
-	echo "  restart                   Rollout restart deployment"
-	#echo "  scale <replicas>         Scale deployment"
+	echo "  deps                        Returns kubectl deployment params"
+	echo "  restart                     Rollout restart deployment"
+	echo "  scale <replicas>            Scale deployment"
 	echo
 	;;
 
