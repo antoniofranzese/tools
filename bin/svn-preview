@@ -7,7 +7,11 @@ NAME=$1
 CHECK=$($SVN info $NAME 2>&1 | grep "^Path:")
 
 if [ -z "$CHECK" ]; then
-	bat --color=always --style=numbers $NAME
+	if [ -d "$NAME" ]; then
+		exa -T $NAME
+	else 
+		bat --color=always --style=numbers $NAME
+	fi
 else
 	if [ "$2" = "head" ]; then
 		CMDLINE=$($SVN info $NAME 2>&1 | grep "^Relative URL:" | cut -d" " -f3)\@HEAD

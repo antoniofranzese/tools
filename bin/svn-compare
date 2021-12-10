@@ -16,13 +16,19 @@ case "$STATUS" in
 		exit 1
 		;;
 	C)
+		echo "Conflicting item: $ITEM" 
 		CONFLICT='yes'
+		;;
+	*)
+		echo "Plain item: $ITEM" 
 		;;
 esac
 
 if [ -z "$CONFLICT" ]; then	
 	echo Checking $LOCAL last revision
-	REV=$(svn changes remote $LOCAL | tail -1 | awk '{print $3}' )
+	REMOTE_URL=$(svn eval URL $LOCAL)
+	REV=$(svn eval LastChangedRev $REMOTE_URL) 
+	#REV=$(svn changes remote $LOCAL | tail -1 | awk '{print $3}' )
 
 	[ "$REV" = "revision:" ] && echo "No changes" && exit 0
 	

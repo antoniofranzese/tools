@@ -1,11 +1,11 @@
 #!/bin/zsh
 
 log() {
-	[ -n "$TRACE" ] && echo '[SQLPLUS]' $* 
+	[ -n "$TRACE" ] && echo '[SQL]' $* 
 }
 
-SQLPLUS=${SQLPLUS_EXECUTABLE:-sqlplus}
-log Executable: ${SQLPLUS}
+SQL=${SQLPLUS_EXECUTABLE:-/usr/bin/sqlplus}
+log Executable: ${SQL}
 
 # Search and source the startup script
 RC=.sqlplusrc
@@ -38,15 +38,15 @@ while [ -n "$1" ]; do
 done
 
 # Dispatch to external command plugin
-if [ "$COMMAND" != "" ]; then
+if [ -n "$COMMAND" ]; then
 	PLUGIN_NAME=$(basename $0)-$COMMAND
 	PLUGIN=$(command -v $PLUGIN_NAME)
 	if [ "$PLUGIN" != "" ]; then
 		log Dispatching to: $PLUGIN $CMDLINE
-		eval SQLPLUS=$SQLPLUS $PLUGIN $CMDLINE
+		eval SQL="$SQL" RC="$RC" $PLUGIN $CMDLINE
 		exit 0
 	fi
 fi
 
-log $SQLPLUS $COMMAND $CMDLINE
-eval $SQLPLUS $COMMAND $CMDLINE
+log $SQL $COMMAND $CMDLINE
+eval $SQL $COMMAND $CMDLINE

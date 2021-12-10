@@ -3,7 +3,7 @@
 ME=$(basename $0)
 CMDLINE=$*
 
-confirm() {
+press() {
 	echo 'Press any key to continue...'
 	read -k1 -s
 }
@@ -32,7 +32,7 @@ case $1 in
 		OUT=$(svn changes remote \
 			| fzf -m \
 				--no-sort \
-				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^Space=Select all | ^S=Stage ^X=Unstage ^T=Commit' \
+				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^L=Clean ^Space=Select all | ^S=Stage ^X=Unstage ^T=Commit' \
 				--header-lines=2 \
 				--bind='ctrl-space:select-all' \
 				--expect="ctrl-u,ctrl-r,ctrl-m,ctrl-s,ctrl-x,ctrl-t" \
@@ -59,7 +59,7 @@ case $1 in
 					fi
 					
 				done <<< $(echo $ROWS) 
-				confirm
+				press
 				reload
 				;;
 
@@ -78,7 +78,7 @@ case $1 in
 					fi
 					
 				done <<< $(echo $ROWS) 
-				confirm
+				press
 				reload
 				;;
 
@@ -94,7 +94,7 @@ case $1 in
 					svn compare $NAME 
 				else
 					echo Skipping $NAME
-					confirm
+					press
 				fi
 				
 				reload
@@ -137,7 +137,7 @@ case $1 in
 				case "$KEY" in
 					c)
 						svn changes commit stage
-						confirm
+						press
 						;;
 				esac
 				reload
@@ -158,27 +158,59 @@ case $1 in
 					fi
 					
 				done <<< $(echo $ROWS) 
-				confirm
+				press
 				reload
 				;;
 
 			ctrl-t)
-				STAGED=N
+				STAGED=
+				FILES=
+
+				# Check selection
 				while read ROW; do
 					ARGS=( ${(s. .)ROW} )
-					LIST=${ARGS[1]}
+					NAME=${ARGS[4]}
+					STATUS=${ARGS[2]}
+					LOCAL_MOD=${STATUS[1]}
+
+				#echo -n "Add $NAME [y/N]?"
+				#KEY=$(read -sk1 -e )
+				#echo
+				#case "$KEY" in
+				#    c)
+				#        svn add $NAME
+					#FILES=${FILES}${NAME}\ 
+				#        press
+				#        ;;
+				#esac
+					#echo Commit:$LOCAL_MOD $NAME
+					FILES=${FILES}${NAME}\ 
 					
-					if [ "$LIST" = "stage" ]; then
-						STAGED=Y
-					fi
-				done <<< $(svn changes remote) 
-				
-				if [ "$STAGED" = "Y" ]; then
+				done <<< $(echo $ROWS) 
+			
+				# No selection, check staging
+				if [ -z "$FILES" ]; then
+					while read ROW; do
+						ARGS=( ${(s. .)ROW} )
+						LIST=${ARGS[1]}
+
+						if [ "$LIST" = "stage" ]; then
+							STAGED=Y
+						fi
+					done <<< $(svn changes remote) 
+				fi
+
+				if [ -n "$STAGED" ]; then
 					svn changes commit stage
 				else
-					svn commit
+					svn commit $FILES
 				fi
-				confirm
+				press
+				reload
+				;;
+
+			ctrl-l)
+				svn clean
 				reload
 				;;
 

@@ -102,7 +102,7 @@ case $1 in
 				printf "%-${LEN}s  %s %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[22,-1]}"
 				echo
 			fi
-		done <<< $( svn status -u $TARGET | grep -v "^$" | sed -e "s/^/#/" )
+		done <<< $( svn status -u $TARGET | grep -v "^$" | grep -v "> moved" | sed -e "s/^/#/" )
 		;;
 
 	*)
@@ -124,7 +124,7 @@ case $1 in
 				printf "%-${LEN}s  %s--- %6s %s" "$LS" "$STATUS" "${REV:-?}" "${LINE[9,-1]}"
 				echo
 			fi
-		done <<< $( svn status $TARGET | grep -v "^$" | sed -e "s/^/#/" )
+		done <<< $( svn status $TARGET | grep -v "^$" | grep -v "> moved" | sed -e "s/^/#/" )
 		;;
 
 esac
