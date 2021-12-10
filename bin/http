@@ -1,26 +1,47 @@
 #!/bin/zsh
 
+HTTPIE=${HTTPIE_EXECUTABLE:-httpie}
+
 function cleanup() {
-	echo $(echo $* | tr -d '\n' | tr -d '\r' )
+	echo $(echo -e "$*" | tr -d '\n' | tr -d '\r' )
 }
 
+LINE=
 SOURCE=
 COLORS=y
-VERBOSE=0
+DEBUG=
+TRACE=
+CURL_VERBOSE=
+URLENCODE=
+DRY_RUN=
+SILENT=
+
 while [[ $# > 0 ]]; do
 	case "$1" in
+		-U|--urlencode)
+			URLENCODE=y
+			shift
+			;;
+
 		--no-colors|--monochrome)
 			COLORS=n
 			shift
 			;;
 
 		-v|--verbose)
-			VERBOSE=1
+			DEBUG=y
 			shift
 			;;
 
 		-vv|--very-verbose)
-			VERBOSE=2
+			DEBUG=y
+			TRACE=y
+			CURL_VERBOSE=-v
+			shift
+			;;
+
+		--dry-run)
+			DRY_RUN=y
 			shift
 			;;
 
@@ -29,12 +50,22 @@ while [[ $# > 0 ]]; do
 			shift
 			;;
 
+		--)
+			shift
+			LINE="$*"
+			break
+			;;
 		*)
 			SOURCE=$1
 			shift
 			;;
 	esac
 done
+
+if [ -n "$LINE" ]; then
+	eval $HTTPIE $LINE
+	exit 0
+fi
 
 METHOD=GET
 URL='http://localhost'
@@ -47,7 +78,7 @@ RESPONSE=$(mktemp)
 trap "rm -f $BODY $RESPONSE" 0 1 2 5 15
 
 while read LINE; do
-	LINE=$(cleanup $LINE)
+	LINE=$(echo -e $(cleanup $LINE) | sed -E 's/{{([^}]*)}}/${\1}/g' | envsubst )
 	case "$SECTION" in
 		url)
 			method=$(echo $LINE | awk '{print $1}')
@@ -64,7 +95,30 @@ while read LINE; do
 
 		headers)
 			if [ -n "$LINE" ]; then
-				HEADERS=$HEADERS\ -H\ \"$LINE\"
+				if [[ ${LINE:l} =~ ^x-http ]]; then
+					[ -n "$TRACE" ] && echo "Custom Header: $LINE"
+
+					NAME=$(echo ${LINE:l} | cut -d: -f1 | tr -d " ")
+					VALUE=$(echo ${LINE:l} | cut -d: -f2- | tr -d " ")
+					case "$NAME" in
+						x-http-body)
+							case "$VALUE" in
+								urlencode)
+									URLENCODE=y
+									;;
+								*)
+									echo Unrecognized body processor: $VALUE
+									;;
+							esac
+							;;
+
+						*)
+							echo Unrecognized custom header: $LINE
+							;;
+					esac
+				else
+					HEADERS=$HEADERS\ -H\ \"$LINE\"
+				fi
 			else 
 				SECTION=body
 			fi
@@ -77,46 +131,73 @@ while read LINE; do
 
 done <<< $(cat $SOURCE | grep -v "^\\/\\*"  )
 
-[ "$VERBOSE" -ge 2 ] && SILENT="" || SILENT="--silent "
-CMDLINE="curl $SILENT --include -X $METHOD $HEADERS -d \"@${BODY}\" --output $RESPONSE $URL"
-[ "$VERBOSE" -ge 1 ] && echo $CMDLINE $'\n'
+[ -z "$TRACE" ] && SILENT="--silent"
+CMDLINE="curl $CURL_VERBOSE $SILENT --include -X $METHOD $HEADERS"
 
-eval $CMDLINE
+if [ -n "$URLENCODE" ]; then
+	ENCODED=
+	AWK_CSV="awk -F ',,|^\"|\",\"|\",|,\"|\"$'"
+	while IFS=$'\t' read -r NAME VALUE; do
 
-CONTENT=text/plain
-SECTION=headers
+		[ -n "$TRACE" ] && echo Encoding: $NAME=$VALUE
 
-if [ -f $RESPONSE ]; then
-	while read LINE; do
-		case "$SECTION" in
-			headers)
-				LINE=$(cleanup $LINE )
-				if [ -n "$LINE" ]; then
-					echo $LINE
-					[[ "$LINE" =~ ^[Cc]ontent-[Tt]ype ]] && CONTENT=$(echo $LINE | awk '{print $2}')
-				else 
-					SECTION=body
-					echo -n "" > $BODY
-					echo ""
-				fi
+		PAR="$(echo $NAME | tr -d '\n' | jq -sRr @uri)=$(echo $VALUE | tr -d '\n' | jq -sRr @uri)"
+
+		[ -n "$ENCODED" ] && ENCODED=$ENCODED\&
+		ENCODED="$ENCODED$PAR"
+
+	done <<< $(cat $BODY | jq -r ' to_entries[] | [.key, .value] | @tsv')
+	echo $ENCODED > $BODY
+fi
+
+CMDLINE="$CMDLINE -d \"@${BODY}\""
+CMDLINE="$CMDLINE --output $RESPONSE \"$URL\""
+
+[ -n "$DEBUG" ] && echo Command line: $CMDLINE 
+[ -n "$TRACE" ] && printf "Body:\n" && cat $BODY
+
+if [ -z "$DRY_RUN" ]; then
+	eval $CMDLINE
+
+	CONTENT=text/plain
+	SECTION=headers
+
+	if [ -f $RESPONSE ]; then
+		#echo "----"
+		#cat $RESPONSE
+		#echo "----"
+		while read LINE; do
+			case "$SECTION" in
+				headers)
+					LINE=$(cleanup $LINE )
+					if [ -n "$LINE" ]; then
+						[ -n "$TRACE" ] && echo $LINE
+						[[ "$LINE" =~ ^[Cc]ontent-[Tt]ype ]] && CONTENT=$(echo $LINE | awk '{print $2}')
+					else 
+						SECTION=body
+						echo -n "" > $BODY
+						echo ""
+					fi
+					;;
+
+				body)
+					echo -e "$LINE" >> $BODY
+					;;
+			esac
+
+		done <<< $(cat $RESPONSE | sed -r 's/\\/\\\\/g' )
+	fi
+
+	if [ -f $BODY ]; then
+		case $CONTENT in
+			application/json)
+				[ "$COLORS" = "y" ] && JQ=-C || JQ=-M
+				cat $BODY | jq $JQ
 				;;
-
-			body)
-				echo $LINE >> $BODY
+			*)
+				cat $BODY
 				;;
 		esac
+	fi
 
-	done <<< $(cat $RESPONSE)
-fi
-
-if [ -f $BODY ]; then
-	case $CONTENT in
-		application/json)
-			[ "$COLORS" = "y" ] && JQ=-C || JQ=-M
-			cat $BODY | jq $JQ
-			;;
-		*)
-			cat $BODY
-			;;
-	esac
-fi
+fi	

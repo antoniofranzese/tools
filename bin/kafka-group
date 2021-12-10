@@ -34,31 +34,35 @@ case $CMD in
 		case $GROUP_KEY in 
 
 			ctrl-t)
-				OUT=$(eval $TOOL $CMDLINE --describe --group $GROUP \
+				OUT2=$(eval $TOOL $CMDLINE --describe --group $GROUP \
 					| fzf \
-					    --height=40% \
+					    --height=80% \
 						--header-lines=2 \
-						--header=$'\n^E=Reset to earliest, ^L=Reset to latest\n\nTopic offsets for '$GROUP \
-						--expect='ctrl-e,ctrl-l' \
+						--header=$'\n^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
+						--expect='ctrl-e,ctrl-l,ctrl-o' \
 						--preview-window=hidden:up:70% \
 						--preview "echo {}" \
-					| awk '{print $2}')
+					)
 
-				TOPIC_KEY=$(head -1 <<< "$OUT")
-				TOPIC=$(tail -1 <<< "$OUT")
+				TOPIC_KEY=$(head -1 <<< "$OUT2")
+				TOPIC=$( echo $(tail -1  <<< "$OUT2") | awk '{print $2}' )
 				[ -z $TOPIC ] && exit 0
 
 				case $TOPIC_KEY in
 					ctrl-e)
-						echo $ME $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | clip-copy --tee
 						;;
 
 					ctrl-l)
-						echo $ME $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | clip-copy --tee
+						;;
+
+					ctrl-o)
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | clip-copy --tee
 						;;
 
 					*)
-						echo $ME $CMDLINE --group $GROUP --topic $TOPIC  | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | clip-copy --tee
 						;;
 				esac
 				;;

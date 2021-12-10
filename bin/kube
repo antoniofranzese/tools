@@ -8,13 +8,14 @@ function execute() {
 	eval $CMD
 }
 
+FZF="--height=100%"
 KUBECTL=${KUBECTL_EXECUTABLE:-/usr/bin/kubectl}
 ME=$(basename $0)
 
 case ${1:-help} in
 pod|pods)
 	$KUBECTL get pods --all-namespaces \
-		| fzf \
+		| fzf $FZF \
 			--header-lines=1 \
 			--header="^R=Reload List  ^P=Refresh Preview" \
 			--preview-window=up:60% \
@@ -26,7 +27,7 @@ pod|pods)
 
 dep|deps)
 	$KUBECTL get deployments --all-namespaces \
-		| fzf \
+		| fzf $FZF \
 			--header-lines=1 \
 			--header="^R=Reload List  ^P=Refresh Preview" \
 			--preview-window=up:60% \
@@ -36,9 +37,21 @@ dep|deps)
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
 	;;
 
+svc|services)
+	$KUBECTL get services --all-namespaces \
+		| fzf $FZF \
+			--header-lines=1 \
+			--header="^R=Reload List  ^P=Refresh Preview" \
+			--preview-window=up:60% \
+			--preview "$KUBECTL describe service {2} -n {1} | bat -l yaml --color=always --style=plain" \
+			--bind="ctrl-r:reload($KUBECTL get services --all-namespaces)" \
+			--bind="ctrl-p:refresh-preview" \
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+	;;
+
 maps)
 	$KUBECTL get configmaps --all-namespaces \
-		| fzf \
+		| fzf $FZF \
 			--header-lines=1 \
 			--header "^S=Save" \
 			--preview-window=up:60% \
@@ -49,13 +62,13 @@ maps)
 
 secrets)
 	$KUBECTL get secrets --all-namespaces \
-		| fzf \
+		| fzf $FZF \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "$KUBECTL get secret {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
-	;;
-
+	;; 
+ 
 exec)
 	EXEC=${2:-/bin/sh}
 	execute $KUBECTL exec --stdin --tty `$ME pod` -- $EXEC
@@ -63,6 +76,10 @@ exec)
 
 shell)
 	$0 exec /bin/sh
+	;;
+
+bash)
+	$0 exec /bin/bash
 	;;
 
 follow)
@@ -82,7 +99,7 @@ forward)
 
 restart)
 	$KUBECTL get deployments --all-namespaces \
-		| fzf -m \
+		| fzf $FZF -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
@@ -93,7 +110,7 @@ restart)
 scale)
 	REPS=${2:-0}
 	$KUBECTL get deployments --all-namespaces \
-		| fzf -m \
+		| fzf $FZF -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
