@@ -1,7 +1,7 @@
 # Shell Tools
 Command line utilities and wrappers, useful to keep the programmers away from the GUI devil.
 
-These tools are intended for a ZSH environment, if you still use BASH adapt the proposed configurations to your needs.
+These tools are intended for a ZSH environment, if you still use BASH update yourself.
 
 Windows users should install and configure WSL (1 or 2); no Unix prompt, no tools.
 
