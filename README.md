@@ -19,7 +19,7 @@ Install the required open source tools according to your operating system.
     sudo apt update
     sudo apt install fzf bat jq dialog
 
-    Download and install deb package from https://github.com/dandavison/delta/releases/latest
+Download and install deb package from https://github.com/dandavison/delta/releases/latest
     
 ### Linux specific installations
     snap install yq
