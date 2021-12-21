@@ -33,7 +33,7 @@ Some tools are *wrappers* for the original executable, and must be provided with
 
 Some tools need only a *_HOME variable, and will stop with an error if missing.
 
-Place the following snippet in your .zshrc script, and edit it according to your configuration.
+Place the following snippet in your .zshrc/.zprofile script, and edit it according to your configuration.
 
 **NOTE:** Every path **MUST** be absolute.
 
