@@ -173,18 +173,19 @@ case $1 in
 					STATUS=${ARGS[2]}
 					LOCAL_MOD=${STATUS[1]}
 
-				#echo -n "Add $NAME [y/N]?"
-				#KEY=$(read -sk1 -e )
-				#echo
-				#case "$KEY" in
-				#    c)
-				#        svn add $NAME
-					#FILES=${FILES}${NAME}\ 
-				#        press
-				#        ;;
-				#esac
-					#echo Commit:$LOCAL_MOD $NAME
-					FILES=${FILES}${NAME}\ 
+					if [ "$LOCAL_MOD" = "?" ]; then
+						echo -n "Add $NAME [y/N]?"
+						KEY=$(read -sk1 -e )
+						echo
+						case "$KEY" in
+							y)
+								svn add $NAME
+								FILES=${FILES}${NAME}\ 
+								;;
+						esac
+					else
+						FILES=${FILES}${NAME}\ 
+					fi
 					
 				done <<< $(echo $ROWS) 
 			
