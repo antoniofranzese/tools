@@ -4,7 +4,7 @@
 #
 function execute() {
 	CMD="$*"
-	echo $CMD | clip-copy --tee
+	echo $CMD | clip-copy 
 	eval $CMD
 }
 
@@ -22,7 +22,7 @@ pod|pods)
 			--preview "$KUBECTL describe pod {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get pods --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
 	;;
 
 dep|deps)
@@ -34,7 +34,7 @@ dep|deps)
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get deployments --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
 	;;
 
 svc|services)
@@ -46,7 +46,7 @@ svc|services)
 			--preview "$KUBECTL describe service {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get services --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
 	;;
 
 maps)
@@ -57,7 +57,7 @@ maps)
 			--preview-window=up:60% \
 			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
 			--bind "ctrl-s:execute($KUBECTL get configmap {2} -n {1} -o yaml > {2}.yaml)" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
 	;;
 
 secrets)
@@ -66,7 +66,7 @@ secrets)
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "$KUBECTL get secret {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy --tee
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
 	;; 
  
 exec)
@@ -104,7 +104,7 @@ restart)
 			--preview-window=up:60% \
 			--preview "kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | clip-copy --tee
+		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | clip-copy 
     ;;
 
 scale)
@@ -115,7 +115,7 @@ scale)
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0 | clip-copy --tee
+		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0 | clip-copy 
 	;;
 
 export)

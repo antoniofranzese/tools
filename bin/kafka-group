@@ -50,25 +50,25 @@ case $CMD in
 
 				case $TOPIC_KEY in
 					ctrl-e)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | clip-copy 
 						;;
 
 					ctrl-l)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | clip-copy 
 						;;
 
 					ctrl-o)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | clip-copy 
 						;;
 
 					*)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | clip-copy --tee
+						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | clip-copy 
 						;;
 				esac
 				;;
 
 			*)
-				echo $ME $CMDLINE --describe --group $GROUP | clip-copy --tee
+				echo $ME $CMDLINE --describe --group $GROUP | clip-copy 
 				;;
 
 		esac

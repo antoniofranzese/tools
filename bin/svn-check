@@ -225,7 +225,7 @@ case $1 in
 				#[ -z "$NAME" ] && exit 0	
 
 				#[ "$REV" != "?" ] && SUFFIX=@${REV} || SUFFIX=''
-				#echo -n ${NAME}${SUFFIX} | clip-copy --tee	
+				#echo -n ${NAME}${SUFFIX} | clip-copy 	
 				;;
 
 		esac

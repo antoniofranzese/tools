@@ -32,7 +32,7 @@ if [ -z "$VAR" ]; then
 else 
 	VALUE=$(echo $PROPS | egrep "^${VAR}=" | cut -d= -f2-)
 	if [ "$COPY" = "yes" ]; then
-		echo -n $VALUE | clip-copy --tee
+		echo -n $VALUE | clip-copy 
 	else
 		echo $VALUE
 	fi

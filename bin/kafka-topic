@@ -9,7 +9,7 @@ case "$CMD" in
 
 	create)
 		if [ -z "$1" ]; then
-			echo -n "--topic name --replication-factor 1 --partitions 1" | clip-copy --tee 
+			echo -n "--topic name --replication-factor 1 --partitions 1" | clip-copy  
 			echo
 		else
 			eval $KAFKA_TOPICS --create $*	
@@ -18,7 +18,7 @@ case "$CMD" in
 
 	alter)
 		if [ -z "$1" ]; then
-			echo -n "--topic name --config retention.ms=10000 --deleteConfig retention.ms" | clip-copy --tee
+			echo -n "--topic name --config retention.ms=10000 --deleteConfig retention.ms" | clip-copy 
 			echo
 		else
 			eval $KAFKA_TOPICS --alter $*	
@@ -27,7 +27,7 @@ case "$CMD" in
 
 	delete)
 		if [ -z "$1" ]; then
-			echo -n "--topic name" | clip-copy --tee
+			echo -n "--topic name" | clip-copy 
 			echo
 		else
 			eval $KAFKA_TOPICS --delete $*	

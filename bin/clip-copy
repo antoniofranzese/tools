@@ -1,17 +1,5 @@
 #!/bin/zsh
 
-while true; do
-	case $1 in
-		--tee)
-			TEE=y
-			shift;
-			;;
-		*)	
-			break;
-			;;
-	esac
-done
-
 if [ -z "$1" ]; then
 	TEXT=$(cat)
 else
@@ -30,7 +18,9 @@ case $(platform) in
 		;;
 
 	*)
-		echo -n $TEXT | xclip -i -sel clipboard
+		if [ $(command -v xclip) ]; then
+			echo -n $TEXT | xclip -i -sel clipboard
+		fi
 		;;
 esac
 
@@ -38,6 +28,4 @@ if [ -n "$TMUX" ]; then
 	tmux copy $TEXT
 fi
 
-if [ -n "$TEE" ]; then
-	echo $TEXT
-fi
+echo $TEXT
