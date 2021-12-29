@@ -1,7 +1,7 @@
 # Shell Tools
 Command line utilities and wrappers, useful to keep the programmers away from the GUI devil.
 
-These tools are intended for a ZSH environment, if you still use BASH adapt the proposed configurations to your needs.
+These tools are intended for a ZSH environment, if you still use BASH update yourself.
 
 Windows users should install and configure WSL (1 or 2); no Unix prompt, no tools.
 
@@ -12,21 +12,28 @@ The wrapper tools require the main tools (mvn, svn, kubectl, etc.), install them
 
 Install the required open source tools according to your operating system.
 
-### Linux/WSL required tools 
-    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CC86BB64
-    sudo add-apt-repository ppa:rmescandon/yq
-    sudo apt update
-    sudo apt install fzf bat jq yq dialog
-
 ### MacOS required tools
     brew install fzf bat jq yq dialog git-delta
+
+### Linux/WSL required tools 
+    sudo apt update
+    sudo apt install fzf bat jq dialog
+
+Download and install deb package from https://github.com/dandavison/delta/releases/latest
+    
+### Linux specific installations
+    snap install yq
+
+### WSL specific installations
+    sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+    sudo chmod a+x /usr/local/bin/yq
 
 ## Environment configuration
 Some tools are *wrappers* for the original executable, and must be provided with the **absolute path** of their original counterpart; if not configured, they assume a default, suitable only for a standard Linux/WSL environment (MacOS requires configuration).
 
 Some tools need only a *_HOME variable, and will stop with an error if missing.
 
-Place the following snippet in your .zshrc script, and edit it according to your configuration.
+Place the following snippet in your .zshrc/.zprofile script, and edit it according to your configuration.
 
 **NOTE:** Every path **MUST** be absolute.
 
