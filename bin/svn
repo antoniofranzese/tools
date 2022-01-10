@@ -45,7 +45,7 @@ if [ "$COMMAND" != "" ]; then
 	if [ "$PLUGIN" != "" ]; then
 		log Dispatching to: $PLUGIN
 		eval SVN=$SVN $PLUGIN $CMDLINE
-		exit 0
+		exit $?
 	fi
 fi
 

@@ -17,7 +17,9 @@ done
 VAR=$1
 TARGET=${2:-.}
 
-BRANCH=$($SVN info | grep '^URL:' | egrep -o '(tags|branches)/[^/]+|trunk' | egrep -o '[^/]+$')
+BRANCH=$($SVN info 2>&1 | grep '^URL:' | egrep -o '(tags|branches)/[^/]+|trunk' | egrep -o '[^/]+$')
+if [[ $? != 0 ]] exit 1
+
 PROPS=$(
 	while read line; do
 		PROP=$(echo $line | cut -d: -f1 | sed "s/\ //g" )
