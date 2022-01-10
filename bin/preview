@@ -1,0 +1,11 @@
+#!/bin/zsh
+
+NAME=$1
+
+if [ -d "$NAME" ]; then
+	exa -T $NAME
+elif [ -f "$NAME" ]; then 
+	bat --color=always --style=numbers $NAME
+else
+	echo Nothing to show
+fi
