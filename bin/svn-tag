@@ -1,6 +1,11 @@
 #!/bin/zsh
 
+WD=$(svn eval WorkingCopyRootPath)
+[ -z $WD ] && exit 1
+
+cd $WD
 URL=$(svn eval URL)
+CLIP=${$(command -v clip-copy):-cat}
 
 [ -z $URL ] && echo "$PWD is not a working copy" && exit 1
 
@@ -18,4 +23,4 @@ else
 	TAG_URL=$URL
 fi
 
-echo -n "svn copy \'$URL\' \'$TAG_URL\' $CMDLINE" | clip-copy 
+echo -n "svn copy \'$URL\' \'$TAG_URL\' $CMDLINE" | $CLIP 

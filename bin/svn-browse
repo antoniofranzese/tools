@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+CLIP=${$(command -v clip-copy):-cat}
+
 case $1 in
 
 	preview)
@@ -99,7 +101,7 @@ case $KEY in
 
 	*)
 		NEXT=${URL}${ITEM}
-		echo -n $NEXT | clip-copy
+		echo -n $NEXT | $CLIP
 		echo $NEXT
 		;;
 

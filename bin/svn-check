@@ -2,6 +2,7 @@
 
 ME=$(basename $0)
 CMDLINE=$*
+CLIP=${$(command -v clip-copy):-cat}
 
 press() {
 	echo 'Press any key to continue...'
@@ -225,7 +226,7 @@ case $1 in
 				#[ -z "$NAME" ] && exit 0	
 
 				#[ "$REV" != "?" ] && SUFFIX=@${REV} || SUFFIX=''
-				#echo -n ${NAME}${SUFFIX} | clip-copy 	
+				#echo -n ${NAME}${SUFFIX} | $CLIP 	
 				;;
 
 		esac
