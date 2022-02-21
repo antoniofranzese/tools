@@ -10,7 +10,6 @@ echo Using configuration from $CFG
 
 case $1 in
 	start)
-		title zookeeper
 		$ZOOKEEPER_HOME/bin/zookeeper-server-start.sh $CFG
 		;;
 	stop)

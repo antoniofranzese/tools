@@ -9,6 +9,7 @@ log() {
 ME=$(basename $0)
 CFG=$KAFKA_HOME/config/${2:-server}.properties
 BIN=$KAFKA_HOME/bin
+CLIP=${$(command -v clip-copy):-cat}
 
 # Search and source the startup script
 RC=.kafkarc
@@ -70,7 +71,7 @@ case $COMMAND in
 
 	producer)
 		if [ -z "$CMDLINE" ]; then
-			echo " --broker-list localhost:9092 --topic name" | clip-copy 
+			echo " --broker-list localhost:9092 --topic name" | $CLIP 
 		else
 			CMDLINE=$(echo $CMDLINE | sed 's/bootstrap-server/broker-list/')
 			eval $BIN/kafka-console-producer.sh $CMDLINE
@@ -79,7 +80,7 @@ case $COMMAND in
 
 	consumer)
 		if [ -z "$CMDLINE" ]; then
-			echo " --bootstrap-server localhost:9092 --topic name --from-beginning" | clip-copy  
+			echo " --bootstrap-server localhost:9092 --topic name --from-beginning" | $CLIP  
 		else
 			eval $BIN/kafka-console-consumer.sh $CMDLINE
 		fi

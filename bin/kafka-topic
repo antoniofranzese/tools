@@ -1,5 +1,9 @@
 #!/bin/zsh
 
+[ -z "$KAFKA_HOME" ] && echo "KAFKA_HOME is not set" && exit 1
+
+CLIP=${$(command -v clip-copy):-cat}
+
 KAFKA_TOPICS=$KAFKA_HOME/bin/kafka-topics.sh
 
 CMD=$1
@@ -9,7 +13,7 @@ case "$CMD" in
 
 	create)
 		if [ -z "$1" ]; then
-			echo -n "--topic name --replication-factor 1 --partitions 1" | clip-copy  
+			echo -n "--topic name --replication-factor 1 --partitions 1" | $CLIP  
 			echo
 		else
 			eval $KAFKA_TOPICS --create $*	
@@ -18,7 +22,7 @@ case "$CMD" in
 
 	alter)
 		if [ -z "$1" ]; then
-			echo -n "--topic name --config retention.ms=10000 --deleteConfig retention.ms" | clip-copy 
+			echo -n "--topic name --config retention.ms=10000 --deleteConfig retention.ms" | $CLIP 
 			echo
 		else
 			eval $KAFKA_TOPICS --alter $*	
@@ -27,7 +31,7 @@ case "$CMD" in
 
 	delete)
 		if [ -z "$1" ]; then
-			echo -n "--topic name" | clip-copy 
+			echo -n "--topic name" | $CLIP 
 			echo
 		else
 			eval $KAFKA_TOPICS --delete $*	
