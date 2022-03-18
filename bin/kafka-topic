@@ -46,6 +46,28 @@ case "$CMD" in
 			eval $KAFKA_TOPICS --describe $*	
 		fi
 		;;
+	
+	offset)
+
+		if [ -z "$1" ]; then
+			echo -n "--topic name" | $CLIP 
+			echo
+		else
+
+    		SOURCE1=$(mktemp -t kafka)
+    		SOURCE2=$(mktemp -t kafka)
+			trap "rm -f $SOURCE1 $SOURCE2" 0 1 2 5 15
+
+			
+			TOOL=$KAFKA_HOME/bin/kafka-run-class.sh\ kafka.tools.GetOffsetShell
+			CMDLINE=$(echo $* | sed s/bootstrap-server/broker-list/ )
+			eval $TOOL $CMDLINE --time -1 > $SOURCE1
+			eval $TOOL $CMDLINE --time -2 > $SOURCE2
+			join -j2 -t: $SOURCE1 $SOURCE2 | awk -F: '{ print $2 ":" $1 ":" $5 ":" $3 ":" ($3 - $5); }' \
+				| prepend "TOPIC:PARTITION:FIRST:LAST:COUNT" \
+			    | column -t -s:
+		fi
+		;;
 
 	list|browse)
 		eval $KAFKA_TOPICS --list $*	
