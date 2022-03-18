@@ -3,6 +3,7 @@
 [ -z "$KAFKA_HOME" ] && echo "KAFKA_HOME is not set" && exit 1
 
 CLIP=${$(command -v clip-copy):-cat}
+ME=$0
 
 KAFKA_TOPICS=$KAFKA_HOME/bin/kafka-topics.sh
 
@@ -69,8 +70,11 @@ case "$CMD" in
 		fi
 		;;
 
+	count)
+		eval $0 offset $* | awk '{print $5}' | tail -n +2 | paste -sd+ - | bc	
+		;;
+	
 	list|browse)
-		eval $KAFKA_TOPICS --list $*	
 		;;
 
 	*)
