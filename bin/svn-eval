@@ -20,7 +20,6 @@ VAR=$1
 TARGET=${2:-.}
 
 BRANCH=$($SVN info 2>&1 | grep '^URL:' | egrep -o '(tags|branches)/[^/]+|trunk' | egrep -o '[^/]+$')
-if [[ $? != 0 ]] exit 1
 
 PROPS=$(
 	while read line; do
