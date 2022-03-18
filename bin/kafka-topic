@@ -54,8 +54,8 @@ case "$CMD" in
 			echo
 		else
 
-    		SOURCE1=$(mktemp -t kafka)
-    		SOURCE2=$(mktemp -t kafka)
+    		SOURCE1=$(mktemp kafka-topic-XXXXXX)
+    		SOURCE2=$(mktemp kafka-topic-XXXXXX)
 			trap "rm -f $SOURCE1 $SOURCE2" 0 1 2 5 15
 
 			
