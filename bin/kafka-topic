@@ -39,7 +39,12 @@ case "$CMD" in
 		;;
 
 	describe)
-		eval $KAFKA_TOPICS --describe $*	
+		if [ -z "$1" ]; then
+			echo -n "--topic name" | $CLIP 
+			echo
+		else
+			eval $KAFKA_TOPICS --describe $*	
+		fi
 		;;
 
 	list|browse)
