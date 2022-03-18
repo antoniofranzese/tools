@@ -1,72 +1,69 @@
 #!/bin/zsh
 #
-# kubectl wrapper 0.4
+# kubectl wrapper 0.5
 #
+
+export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} --height=100% --preview-window=up:60%"
+KUBECTL=${KUBECTL_EXECUTABLE:-/usr/bin/kubectl}
+CLIP=${$(command -v clip-copy):-cat}
+ME=$(basename $0)
+
 function execute() {
 	CMD="$*"
-	echo $CMD | clip-copy 
+	echo $CMD | $CLIP 
 	eval $CMD
 }
-
-FZF="--height=100%"
-KUBECTL=${KUBECTL_EXECUTABLE:-/usr/bin/kubectl}
-ME=$(basename $0)
 
 case ${1:-help} in
 pod|pods)
 	$KUBECTL get pods --all-namespaces \
-		| fzf $FZF \
+		| fzf \
 			--header-lines=1 \
 			--header="^R=Reload List  ^P=Refresh Preview" \
-			--preview-window=up:60% \
 			--preview "$KUBECTL describe pod {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get pods --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
 dep|deps)
 	$KUBECTL get deployments --all-namespaces \
-		| fzf $FZF \
+		| fzf \
 			--header-lines=1 \
 			--header="^R=Reload List  ^P=Refresh Preview" \
-			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get deployments --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
 svc|services)
 	$KUBECTL get services --all-namespaces \
-		| fzf $FZF \
+		| fzf \
 			--header-lines=1 \
 			--header="^R=Reload List  ^P=Refresh Preview" \
-			--preview-window=up:60% \
 			--preview "$KUBECTL describe service {2} -n {1} | bat -l yaml --color=always --style=plain" \
 			--bind="ctrl-r:reload($KUBECTL get services --all-namespaces)" \
 			--bind="ctrl-p:refresh-preview" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
 maps)
 	$KUBECTL get configmaps --all-namespaces \
-		| fzf $FZF \
+		| fzf \
 			--header-lines=1 \
 			--header "^S=Save" \
-			--preview-window=up:60% \
 			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
 			--bind "ctrl-s:execute($KUBECTL get configmap {2} -n {1} -o yaml > {2}.yaml)" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
 secrets)
 	$KUBECTL get secrets --all-namespaces \
-		| fzf $FZF \
+		| fzf \
 			--header-lines=1 \
-			--preview-window=up:60% \
 			--preview "$KUBECTL get secret {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
-		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | clip-copy 
+		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;; 
  
 exec)
@@ -89,7 +86,7 @@ follow)
 		shift
 		POD=$*
 	fi
-	execute $KUBECTL logs --follow $POD
+	execute $KUBECTL logs --follow $POD --since=1h
 	;;
 
 forward)
@@ -99,23 +96,23 @@ forward)
 
 restart)
 	$KUBECTL get deployments --all-namespaces \
-		| fzf $FZF -m \
+		| fzf  -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "kubectl describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | clip-copy 
+		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | $CLIP 
     ;;
 
 scale)
 	REPS=${2:-0}
 	$KUBECTL get deployments --all-namespaces \
-		| fzf $FZF -m \
+		| fzf  -m \
 			--header-lines=1 \
 			--preview-window=up:60% \
 			--preview "$KUBECTL describe deployment {2} -n {1} | bat -l yaml --color=always --style=plain" \
 		| awk '{ print $2, $1}' \
-		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0 | clip-copy 
+		| xargs -n2 sh -c echo\ $KUBECTL' scale deployment $1 --namespace $2 --replicas='$REPS argv0 | $CLIP 
 	;;
 
 export)
