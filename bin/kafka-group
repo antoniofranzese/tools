@@ -35,37 +35,46 @@ case $CMD in
 		case $GROUP_KEY in 
 
 			ctrl-t)
-				OUT2=$(eval $TOOL $CMDLINE --describe --group $GROUP \
-					| fzf \
-					    --height=80% \
-						--header-lines=2 \
-						--header=$'\n^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
-						--expect='ctrl-e,ctrl-l,ctrl-o' \
-						--preview-window=hidden:up:70% \
-						--preview "echo {}" \
-					)
+				RELOAD=true
+				while $RELOAD; do
+					RELOAD=FALSE
 
-				TOPIC_KEY=$(head -1 <<< "$OUT2")
-				TOPIC=$( echo $(tail -1  <<< "$OUT2") | awk '{print $2}' )
-				[ -z $TOPIC ] && exit 0
+					OUT2=$(eval $TOOL $CMDLINE --describe --group $GROUP \
+						| fzf \
+							--height=80% \
+							--header-lines=2 \
+							--header=$'\n^P=Reload preview, ^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
+							--expect='ctrl-p,ctrl-e,ctrl-l,ctrl-o' \
+							--preview-window=hidden:up:70% \
+							--preview "echo {}" \
+						)
 
-				case $TOPIC_KEY in
-					ctrl-e)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | $CLIP 
-						;;
+					TOPIC_KEY=$(head -1 <<< "$OUT2")
+					TOPIC=$( echo $(tail -1  <<< "$OUT2") | awk '{print $2}' )
+					[ -z $TOPIC ] && exit 0
 
-					ctrl-l)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | $CLIP 
-						;;
+					case $TOPIC_KEY in
+						ctrl-p)
+							RELOAD=true
+							;;
 
-					ctrl-o)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | $CLIP 
-						;;
+						ctrl-e)
+							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | $CLIP 
+							;;
 
-					*)
-						echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | $CLIP 
-						;;
-				esac
+						ctrl-l)
+							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | $CLIP 
+							;;
+
+						ctrl-o)
+							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | $CLIP 
+							;;
+
+						*)
+							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | $CLIP 
+							;;
+					esac
+				done
 				;;
 
 			*)

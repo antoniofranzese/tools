@@ -48,17 +48,20 @@ case $1 in
 		ARGS=
 		if [ -n "$1" ]; then
 			while [ -n "$1" ]; do
-				if [[ "$1" =~ ^http.* ]]; then
+				if [ -z "$URL" ]; then
 					URL="$1"
 				else
 					ARGS=$ARGS\ $1
 				fi
 				[[ $# > 0 ]] && shift || break
 			done
+
 		else
 			URL=$(svn eval RelativeURL)
 		fi	
 
+		
+		echo $ME lines args=$ARGS url=$URL
 		eval $ME lines $ARGS $URL \
 			| fzf \
 				--header=$'\n?=Preview, ^V=View, ^E=Edit log\n'"Logs for $URL" \

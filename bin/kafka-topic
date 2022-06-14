@@ -75,6 +75,7 @@ case "$CMD" in
 		;;
 	
 	list|browse)
+		eval $KAFKA_TOPICS --list $*		
 		;;
 
 	*)

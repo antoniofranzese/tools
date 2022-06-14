@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Copyright (C) 2020 Antonio Franzese (antonio@franzese.me)
+#
+
+FILE=$1
+CWD=$PWD
+while [ $PWD != "/" ]; do 
+	[ -f $FILE ] && echo $(absname $FILE) 
+	cd .. 
+done
