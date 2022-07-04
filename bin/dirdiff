@@ -37,7 +37,7 @@ case $CMD in
 				FILE1=$(echo $LINE | awk '{print $2}' | sed 's/<DIR1>//' | sed 's/^\///')
 				print -P "%F{178}<> $FILE1%f" 
 			fi
-		done <<< $(eval diff --ignore-all-space --strip-trailing-cr --recursive --brief $EXCLUDE $DIR1 $DIR2 | sed "s/$RE1/\<DIR1\>/" | sed "s/$RE2/\<DIR2\>/" | sort ) 
+		done <<< $(eval diff --ignore-all-space --strip-trailing-cr --recursive --brief $EXCLUDE $DIR1 $DIR2 | sed "s/\ $RE1/\ \<DIR1\>/" | sed "s/\ $RE2/\ \<DIR2\>/" | sort ) 
 		;;
 
 	browse)
