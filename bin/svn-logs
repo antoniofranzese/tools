@@ -63,7 +63,7 @@ case $1 in
 		
 		echo $ME lines args=$ARGS url=$URL
 		eval $ME lines $ARGS $URL \
-			| fzf \
+			| fzf --no-sort --height 100% --preview-window=up,60% \
 				--header=$'\n?=Preview, ^V=View, ^E=Edit log\n'"Logs for $URL" \
 				--preview "$0 preview ${URL} {1}" \
 				--bind "ctrl-v:execute($0 view ${URL} {1})" \
