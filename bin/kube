@@ -63,9 +63,10 @@ maps)
 	$KUBECTL get configmaps --all-namespaces \
 		| fzf \
 			--header-lines=1 \
-			--header "^S=Save" \
+			--header "^S=Save ^E=Edit" \
 			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
 			--bind "ctrl-s:execute($KUBECTL get configmap {2} -n {1} -o yaml > {2}.yaml)" \
+			--bind "alt-e:execute($KUBECTL edit configmap {2} -n {1} -o yaml)" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
@@ -79,6 +80,7 @@ secrets)
  
 exec)
 	EXEC=${2:-/bin/sh}
+	USER=${3:-root}
 	execute $KUBECTL exec --stdin --tty `$ME pod` -- $EXEC
 	;;
 
