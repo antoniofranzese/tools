@@ -4,7 +4,7 @@ log() {
 	[ -n "$TRACE" ] && echo '[SVN]' $* 
 }
 
-export LANG=en_US
+export LANG=en_US.utf-8
 SVN=${SVN_EXECUTABLE:-/usr/bin/svn}
 log Executable: ${SVN}
 
