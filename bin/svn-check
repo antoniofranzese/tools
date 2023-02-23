@@ -33,10 +33,10 @@ case $1 in
 		OUT=$(svn changes remote \
 			| fzf -m \
 				--no-sort \
-				--header=$'\n''^U=Update ^R=Revert ^M=Merge ^L=Clean ^Space=Select all | ^S=Stage ^X=Unstage ^T=Commit' \
+				--header=$'\n''^T=Commit ^U=Update ^R=Revert ^M=Merge ^L=Clean | ^P=Update Project ^Space=Select All' \
 				--header-lines=2 \
 				--bind='ctrl-space:select-all' \
-				--expect="ctrl-u,ctrl-r,ctrl-m,ctrl-s,ctrl-x,ctrl-t" \
+				--expect="ctrl-u,ctrl-r,ctrl-m,ctrl-p,ctrl-t,ctrl-l" \
 				--preview="$ME preview {4} {2}" \
 			| tr -s ' '
 		)
@@ -208,6 +208,11 @@ case $1 in
 					svn commit $FILES
 				fi
 				press
+				reload
+				;;
+
+			ctrl-p)
+				svn update
 				reload
 				;;
 

@@ -21,7 +21,7 @@ case $1 in
 		FIELD=0
 		while read chunk; do
 
-			if [[ "$chunk" =~ ^\--- ]]; then
+			if [[ "$chunk" =~ ^\-\-\- ]]; then
 				if [ -n "$LINE" ]; then
 					echo $LINE
 				fi
