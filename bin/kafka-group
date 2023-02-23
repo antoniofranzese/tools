@@ -16,6 +16,22 @@ case $CMD in
 		eval $TOOL $CMDLINE --list
 		;;
 
+	monitor)
+		eval $TOOL $CMDLINE --describe 2&>/dev/null \
+			| fzf \
+				--height=80% \
+				--header-lines=2 \
+				--header=$'\n^P=Reload preview, ^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
+				--bind="ctrl-p:reload($TOOL $CMDLINE --describe --group $GROUP)" \
+				--bind="ctrl-e:execute(echo Ciccio | clip-copy)" \
+				--preview-window=hidden:up:70% \
+				--preview "echo {}" 
+		;;
+
+	describe)
+		eval $TOOL $CMDLINE --describe
+		;;
+
 	browse)
 		OUT=$(eval $TOOL $CMDLINE --list \
 			| sort \
@@ -39,41 +55,50 @@ case $CMD in
 				while $RELOAD; do
 					RELOAD=FALSE
 
-					OUT2=$(eval $TOOL $CMDLINE --describe --group $GROUP \
+					eval $TOOL $CMDLINE --describe --group $GROUP 2&>/dev/null \
 						| fzf \
 							--height=80% \
 							--header-lines=2 \
 							--header=$'\n^P=Reload preview, ^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
-							--expect='ctrl-p,ctrl-e,ctrl-l,ctrl-o' \
+							--bind="ctrl-p:reload($TOOL $CMDLINE --describe --group $GROUP)" \
+							--bind="ctrl-e:execute(sh -c echo Ciccio)+abort" \
 							--preview-window=hidden:up:70% \
-							--preview "echo {}" \
-						)
+							--preview "echo {}" 
+					#OUT2=$(eval $TOOL $CMDLINE --describe --group $GROUP \
+					#    | fzf \
+					#        --height=80% \
+					#        --header-lines=2 \
+					#        --header=$'\n^P=Reload preview, ^E=Reset to earliest, ^L=Reset to latest, ^O=Reset to offset\n\nTopic offsets for '$GROUP \
+					#        --expect='ctrl-p,ctrl-e,ctrl-l,ctrl-o' \
+					#        --preview-window=hidden:up:70% \
+					#        --preview "echo {}" \
+					#    )
 
-					TOPIC_KEY=$(head -1 <<< "$OUT2")
-					TOPIC=$( echo $(tail -1  <<< "$OUT2") | awk '{print $2}' )
-					[ -z $TOPIC ] && exit 0
+					#TOPIC_KEY=$(head -1 <<< "$OUT2")
+					#TOPIC=$( echo $(tail -1  <<< "$OUT2") | awk '{print $2}' )
+					#[ -z $TOPIC ] && exit 0
 
-					case $TOPIC_KEY in
-						ctrl-p)
-							RELOAD=true
-							;;
+					#case $TOPIC_KEY in
+					#    ctrl-p)
+					#        RELOAD=true
+					#        ;;
 
-						ctrl-e)
-							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | $CLIP 
-							;;
+					#    ctrl-e)
+					#        echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-earliest | $CLIP 
+					#        ;;
 
-						ctrl-l)
-							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | $CLIP 
-							;;
+					#    ctrl-l)
+					#        echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-latest | $CLIP 
+					#        ;;
 
-						ctrl-o)
-							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | $CLIP 
-							;;
+					#    ctrl-o)
+					#        echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC --reset-offsets --execute --to-offset \<offset\> | $CLIP 
+					#        ;;
 
-						*)
-							echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | $CLIP 
-							;;
-					esac
+					#    *)
+					#        echo $TOOL $CMDLINE --group $GROUP --topic $TOPIC  | $CLIP 
+					#        ;;
+					#esac
 				done
 				;;
 

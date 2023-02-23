@@ -99,7 +99,7 @@ case $COMMAND in
 		;;
 
 	configs)
-		eval $KAFKA_HOME/bin/kafka-configs.sh $*
+		eval $KAFKA_HOME/bin/kafka-configs.sh $CMDLINE
 		;;
 
 	groups)
