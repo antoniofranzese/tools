@@ -26,7 +26,7 @@ case $CMD in
 			if [[ "$LINE" =~ ^Only ]]; then
 				FOLDER=$(echo $LINE | awk '{print $3}' | sed "s/:$//")
 				FILE=$(echo $LINE | awk '{print $4}')
-				[[ "$FOLDER" =~ ^\<DIR1\> ]] && SIDE='{red}<<' || SIDE='{93}>>'
+				[[ "$FOLDER" =~ ^\<DIR1\> ]] && SIDE='{197}<<' || SIDE='{green}>>'
 				FOLDER=$( echo $FOLDER | sed -e 's/<DIR.>//' | sed 's/^\///' )
 				if [ -z "$FOLDER" ]; then 
 					print -P "%F$SIDE $FILE%f"
