@@ -1,0 +1,4 @@
+#!/bin/bash
+
+git status -s | fzf -m --preview='git diff {2} | delta' | awk '{ print $2}'
+

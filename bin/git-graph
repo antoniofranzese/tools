@@ -1,0 +1,10 @@
+#!/bin/zsh
+
+git log --all --decorate --oneline --graph --color=always --format="%C(auto)%h%d %C(red)[%an]%C(auto) %s %C(black)%C(bold)%cr" \
+	| fzf --ansi --no-sort --reverse \
+		--height="100%" \
+		--preview="echo {} \
+			| sed 's/^[^a-z0-9]*//;/^$/g' \
+			| cut -d' ' -f1 \
+			| xargs git show \
+			| delta --file-style omit --hunk-header-style omit --paging never --line-numbers"

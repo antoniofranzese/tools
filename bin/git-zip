@@ -1,0 +1,25 @@
+#!/bin/bash
+
+GIT_FOLDER=$(while [ $PWD != "/" ]; do test -e .git && { pwd; break; }; cd .. ; done)
+
+if [ "$GIT_FOLDER" != "" ]; then
+	cd $GIT_FOLDER
+
+	if [ "$1" != "" ]; then
+		#TODO: add .zip if missing
+		OUT=${1}
+	else
+		OUT=$(basename $PWD).zip
+	fi
+
+	BRANCH=$(git branch --show-current)
+
+	echo Within $PWD
+	echo Zipping $BRANCH into $OUT
+	git archive --format zip --output "${OUT}" $BRANCH
+	exit 0
+
+else
+	echo Not a Git folder
+	exit 1
+fi
