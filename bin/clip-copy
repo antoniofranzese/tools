@@ -19,7 +19,7 @@ case $(platform) in
 
 	*)
 		if [ $(command -v xclip) ]; then
-			echo -n $TEXT | xclip -i -sel clipboard
+			echo -n $TEXT | xclip -sel clipboard
 		fi
 		;;
 esac
