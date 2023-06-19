@@ -117,6 +117,14 @@ restart)
 		| xargs -n2 sh -c echo\ $KUBECTL' rollout restart deployment $1 --namespace $2' argv0 | $CLIP 
     ;;
 
+context)
+        $KUBECTL config get-contexts \
+                | fzf -m \
+                        --header-lines=1 \
+                | awk '{ print $2 }' \
+                | xargs -n2 sh -c echo\ $KUBECTL' config use-context $1' argv0 | $CLIP
+    ;;
+
 scale)
 	REPS=${2:-0}
 	$KUBECTL get deployments --all-namespaces \
