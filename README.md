@@ -55,3 +55,5 @@ Some tools emit a command line snippet. I you want the text automatically placed
     }
     
 Prepend *edit* to your command line to capture and edit the tool output.
+
+AF
