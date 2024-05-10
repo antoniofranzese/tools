@@ -65,8 +65,8 @@ maps)
 			--header-lines=1 \
 			--header "^S=Save ^E=Edit" \
 			--preview "$KUBECTL get configmap {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
+			--bind "ctrl-e:execute($KUBECTL edit configmap {2} -n {1} -o yaml &> /dev/tty)" \
 			--bind "ctrl-s:execute($KUBECTL get configmap {2} -n {1} -o yaml > {2}.yaml)" \
-			--bind "alt-e:execute($KUBECTL edit configmap {2} -n {1} -o yaml)" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;;
 
@@ -77,6 +77,14 @@ secrets)
 			--preview "$KUBECTL get secret {2} -n {1} -o yaml | bat -l yaml --color=always --style=plain" \
 		| awk '{split($0,a," "); print a[2],"--namespace",a[1]}' | $CLIP 
 	;; 
+
+ctx|context)
+
+ 	$KUBECTL config get-contexts | sed s/^\ /./ | sed s/^\*/\>\>\>/ | awk '{print $1,"\t",$2,"\t",$4}' | column -t \
+		| fzf \
+			--header-lines=1 \
+			--bind "enter:become($KUBECTL config use-context {2})"
+	;;
  
 exec)
 	EXEC=${2:-/bin/sh}
@@ -164,6 +172,13 @@ copy-secret)
 			| yq eval 'del(.metadata.namespace)' - \
 			| $KUBECTL apply --namespace=$3 -f -
 	fi
+	;;
+
+nodes)
+	$KUBECTL get nodes -o wide \
+		| sed -e 's/\([a-zA-Z0-9]\)\ \([a-zA-Z0-9]\)/\1_\2/g' \
+		| awk '{print $1,$2,$4,$5,$6,$7,$8}' \
+		| column -t
 	;;
 
 help)
