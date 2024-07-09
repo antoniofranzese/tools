@@ -110,6 +110,18 @@ follow)
 	execute $KUBECTL logs --follow $POD --since=1h
 	;;
 
+stern)
+	if [ -z "$2" ]; then
+		POD=`$ME pod` 
+	else
+		shift
+		POD=$*
+	fi
+    PODNAME=$( echo $POD | cut -d" " -f1 | rev | cut -d"-" -f3- | rev )
+    NS=$(echo $POD | cut -d" " -f2-3)
+	execute stern $PODNAME $NS --output=raw --since=1h
+    ;;
+
 forward)
 	[ -z "$2" ] && echo Missing port number && exit 0
 	execute $KUBECTL port-forward `$ME pod` ${3:-$2}:$2
