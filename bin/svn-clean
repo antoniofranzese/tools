@@ -2,6 +2,8 @@
 
 #svn status | grep '^[I?]' | cut -c 9- | xargs rm -i
 
+[ "$1" = "compile" ] && echo "Did you mean MVN?" && exit 0
+
 FZF=(-m --preview-window="up:70%" --preview="svn preview {2}")
 
 if [ -z "$1" ]; then

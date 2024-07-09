@@ -23,4 +23,4 @@ else
 	TAG_URL=$URL
 fi
 
-echo -n "svn copy \'$URL\' \'$TAG_URL\' $CMDLINE" | $CLIP 
+echo -n "svn copy \'$URL\' \'$TAG_URL\' -m \'Tag $TAG\' $CMDLINE" | $CLIP 
