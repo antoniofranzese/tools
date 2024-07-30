@@ -101,13 +101,9 @@ bash)
 	;;
 
 follow)
-	if [ -z "$2" ]; then
-		POD=`$ME pod` 
-	else
-		shift
-		POD=$*
-	fi
-	execute $KUBECTL logs --follow $POD --since=1h
+	[ -n "$2" ] && SINCE=$2 || SINCE=1h
+	POD=`$ME pod` 
+	execute $KUBECTL logs --follow $POD --since=$SINCE
 	;;
 
 stern)
@@ -120,6 +116,17 @@ stern)
     PODNAME=$( echo $POD | cut -d" " -f1 | rev | cut -d"-" -f3- | rev )
     NS=$(echo $POD | cut -d" " -f2-3)
 	execute stern $PODNAME $NS --output=raw --since=1h
+    ;;
+
+top)
+	if [ -z "$2" ]; then
+		POD=`$ME pod` 
+        NS=$(echo $POD | cut -d" " -f2-3)
+	else
+		shift
+		NS="--namespace $*"
+	fi
+	execute watch $KUBECTL top pods $NS
     ;;
 
 forward)
